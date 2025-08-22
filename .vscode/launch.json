@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+         {
+      "name": "TecsaDev",
+      "request": "launch",
+      "type": "al",
+      "server": "http://175.139.186.225:5000/BC260-PRO/",
+      "serverInstance": "BC260-PRO",
+      "authentication": "UserPassword",
+      "startupObjectId": 22,
+      "startupObjectType": "Page",
+      "breakOnError": true,
+      "launchBrowser": true,
+      "enableLongRunningSqlStatements": true,
+      "enableSqlInformationDebugger": true,
+      "tenant": "default",
+      "port": 7249,
+      // "API Port": 7248,
+      "schemaUpdateMode":"ForceSync"
+    },
+     {
+      "name": "Tecsa sandbox",
+      "request": "launch",
+      "type": "al",
+      "tenant": "tecsa.com.my",
+       "environmentType": "Sandbox",
+      "environmentName": "Procure360",
+      "startupObjectId": 9002,
+      "startupObjectType": "Page",
+      "breakOnError": true,
+      "launchBrowser": true,
+      "enableLongRunningSqlStatements": true,
+      "enableSqlInformationDebugger": true,
+      "schemaUpdateMode": "ForceSync"
+    },
+    ]
+}
