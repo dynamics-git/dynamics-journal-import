@@ -17,7 +17,12 @@ page 50501 "GJ Mapping Wizard"
                 field("Last Data Row"; Rec."Last Data Row") { ApplicationArea = All; Editable = false; }
                 field("Last Data Col"; Rec."Last Data Col") { ApplicationArea = All; Editable = false; }
             }
-            part(MapLines; "GJ Map Work ListPart")
+            // part(MapLines; "GJ Map Work ListPart")
+            // {
+            //     SubPageLink = "Upload Id" = FIELD("Upload Id");
+            //     ApplicationArea = All;
+            // }
+            part(StagingLines; "GJ Staging Line ListPart")
             {
                 SubPageLink = "Upload Id" = FIELD("Upload Id");
                 ApplicationArea = All;

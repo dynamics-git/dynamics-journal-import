@@ -44,20 +44,17 @@ page 50500 "GJ Upload Runner"
 
                 trigger OnAction()
                 var
-                    InS: InStream;
                     FileName: Text;
                     Loader: Codeunit "GJ Staging Loader";
                     UploadId: Guid;
                     Wizard: Page "GJ Mapping Wizard";
                     StagingHdr: Record "GJ Staging Header";
                 begin
-                    if not UploadIntoStream('Select Excel file', '', '', FileName, InS) then
-                        exit;
-
-                    UploadId := Loader.Stage(ExistingTemplate, NewTemplate, InS, FileName, SheetName, HasHeader, StartRow);
-                    Message('Staged. Upload Id: %1', UploadId);
+                    UploadId := Loader.ReadExcelSheet(ExistingTemplate, NewTemplate, FileName, SheetName, HasHeader, StartRow);
+                    //Message('Staged. Upload Id: %1', UploadId);
                     // Next UI step: open Mapping Wizard filtered by this UploadId
                     //PAGE.RunModal(PAGE::"GJ Mapping Wizard", UploadId);
+                    Commit();
                     StagingHdr.Reset();
                     StagingHdr.SetRange("Upload Id", UploadId);
                     Wizard.SetTableView(StagingHdr);
