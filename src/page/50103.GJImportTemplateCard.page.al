@@ -24,7 +24,9 @@ page 50503 "GJ Import Template Card"
             part(Map; "GJ Map Work ListPart")
             {
                 SubPageLink = "Template Code" = field(Code);
+                UpdatePropagation = Both;
             }
+
         }
     }
 
@@ -47,4 +49,10 @@ page 50503 "GJ Import Template Card"
             }
         }
     }
+    trigger OnAfterGetCurrRecord()
+    begin
+        // Pass the context so new lines are prefilled
+        CurrPage.Map.PAGE.SetTemplateCode(Rec.Code);
+    end;
+
 }

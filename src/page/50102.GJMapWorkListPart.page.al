@@ -1,7 +1,7 @@
 page 50502 "GJ Map Work ListPart"
 {
     PageType = ListPart;
-    SourceTable = "GJ Map Work";
+    SourceTable = "GJ Import Column Map";
     Caption = 'Column Mapping';
     ApplicationArea = All;
 
@@ -12,12 +12,34 @@ page 50502 "GJ Map Work ListPart"
         {
             repeater(G)
             {
-                field("Column Index"; Rec."Column Index") { ApplicationArea = All; Editable = false; }
-                field("Detected Header"; Rec."Detected Header") { ApplicationArea = All; Editable = false; }
+                field("Column Index"; Rec."Column Index") { ApplicationArea = All; }
                 field("Target Field"; Rec."Target Field") { ApplicationArea = All; }
                 field("Dimension Code"; Rec."Dimension Code") { ApplicationArea = All; }
                 field("Constant Value"; Rec."Constant Value") { ApplicationArea = All; }
             }
         }
     }
+    trigger OnNewRecord(BelowxRec: Boolean)
+    var
+        MapRec: Record "GJ Import Column Map";
+    begin
+        // Make sure new lines inherit the Template Code from parent
+        if Rec."Template Code" = '' then
+            Rec."Template Code" := TemplateCodeCtx;
+
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    begin
+        Rec.TestField("Template Code");
+        exit(true);
+    end;
+
+    var
+        TemplateCodeCtx: Code[20];
+
+    procedure SetTemplateCode(TemplateCode: Code[20])
+    begin
+        TemplateCodeCtx := TemplateCode;
+    end;
 }
