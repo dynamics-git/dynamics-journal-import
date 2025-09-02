@@ -13,7 +13,17 @@ page 50502 "GJ Map Work ListPart"
             repeater(G)
             {
                 field("Column Index"; Rec."Column Index") { ApplicationArea = All; }
-                field("Target Field"; Rec."Target Field") { ApplicationArea = All; }
+                field("Target Field No."; Rec."Target Field No.")
+                {
+                    ToolTip = 'Specifies the value of the Target Field field.', Comment = '%';
+                    LookupPageId = "GJ Field Lookup";
+                }
+                field("Target Field Caption"; Rec."Target Field Caption")
+                {
+                    ToolTip = 'Specifies the value of the Target Field Caption field.', Comment = '%';
+                }
+                // field("Target Field"; Rec."Target Field") { ApplicationArea = All; }
+
                 field("Dimension Code"; Rec."Dimension Code") { ApplicationArea = All; }
                 field("Constant Value"; Rec."Constant Value") { ApplicationArea = All; }
             }

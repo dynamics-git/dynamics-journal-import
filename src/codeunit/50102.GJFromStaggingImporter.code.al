@@ -67,67 +67,67 @@ codeunit 50501 "GJ From Staging Importer"
                 if Map.FindSet() then
                     repeat
                         colVal := GetCol(L, Map."Column Index");
-                        if Map."Constant Value" <> '' then
-                            colVal := Map."Constant Value";
+                        lineHasData := true;
+                        //       if Map."Constant Value" <> '' then
+                        colVal := Map."Constant Value";
 
-                        case Map."Target Field" of
-                            Map."Target Field"::AccountType:
-                                if colVal <> '' then begin
-                                    acctType := ParseAcctType(colVal);
-                                    lineHasData := true;
-                                end;
+                    // case Map."Target Field" of
+                    //     Map."Target Field"::AccountType:
+                    //         if colVal <> '' then begin
+                    //             acctType := ParseAcctType(colVal);
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::AccountNo:
-                                begin
-                                    acctNo := CopyStr(colVal, 1, MaxStrLen(acctNo));
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::AccountNo:
+                    //         begin
+                    //             acctNo := CopyStr(colVal, 1, MaxStrLen(acctNo));
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::PostingDate:
-                                begin
-                                    if colVal <> '' then Evaluate(postDate, colVal);
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::PostingDate:
+                    //         begin
+                    //             if colVal <> '' then Evaluate(postDate, colVal);
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::DocumentNo:
-                                begin
-                                    docNo := CopyStr(colVal, 1, MaxStrLen(docNo));
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::DocumentNo:
+                    //         begin
+                    //             docNo := CopyStr(colVal, 1, MaxStrLen(docNo));
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::Description:
-                                begin
-                                    descr := CopyStr(colVal, 1, MaxStrLen(descr));
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::Description:
+                    //         begin
+                    //             descr := CopyStr(colVal, 1, MaxStrLen(descr));
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::Amount:
-                                begin
-                                    if colVal <> '' then Evaluate(amount, colVal);
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::Amount:
+                    //         begin
+                    //             if colVal <> '' then Evaluate(amount, colVal);
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::BalAccountNo:
-                                begin
-                                    balAcctNo := CopyStr(colVal, 1, MaxStrLen(balAcctNo));
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::BalAccountNo:
+                    //         begin
+                    //             balAcctNo := CopyStr(colVal, 1, MaxStrLen(balAcctNo));
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::CurrencyCode:
-                                begin
-                                    curCode := CopyStr(colVal, 1, MaxStrLen(curCode));
-                                    lineHasData := true;
-                                end;
+                    //     Map."Target Field"::CurrencyCode:
+                    //         begin
+                    //             curCode := CopyStr(colVal, 1, MaxStrLen(curCode));
+                    //             lineHasData := true;
+                    //         end;
 
-                            Map."Target Field"::Dimension:
-                                if (Map."Dimension Code" <> '') and (colVal <> '') then begin
-                                    if DimMap.Get(Map."Dimension Code", colVal) then
-                                        AddDim(TempDimSet, Map."Dimension Code", DimMap."Dimension Value Code")
-                                    else
-                                        AddDim(TempDimSet, Map."Dimension Code", CopyStr(colVal, 1, 20)); // fallback
-                                    lineHasData := true;
-                                end;
-                        end;
+                    //     Map."Target Field"::Dimension:
+                    //         if (Map."Dimension Code" <> '') and (colVal <> '') then begin
+                    //             if DimMap.Get(Map."Dimension Code", colVal) then
+                    //                 AddDim(TempDimSet, Map."Dimension Code", DimMap."Dimension Value Code")
+                    //             else
+                    //                 AddDim(TempDimSet, Map."Dimension Code", CopyStr(colVal, 1, 20)); // fallback
+                    //         end;
+                    //end;
                     until Map.Next() = 0;
 
                 if not lineHasData then

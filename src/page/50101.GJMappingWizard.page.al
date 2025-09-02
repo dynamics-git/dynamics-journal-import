@@ -162,7 +162,7 @@ page 50501 "GJ Mapping Wizard"
                             Map.Init();
                             Map."Template Code" := tmplCode;
                             Map."Column Index" := Work."Column Index";
-                            Map."Target Field" := Work."Target Field";
+                            // Map."Target Field" := Work."Target Field";
                             Map."Dimension Code" := Work."Dimension Code";
                             Map."Constant Value" := Work."Constant Value";
                             Map.Insert(true);
