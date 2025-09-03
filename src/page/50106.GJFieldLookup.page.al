@@ -4,6 +4,9 @@ page 50506 "GJ Field Lookup"
     SourceTable = Field;
     Caption = 'Gen. Journal Line Fields';
     ApplicationArea = All;
+    Editable = false;
+    InsertAllowed = false;
+    DeleteAllowed = false;
 
     layout
     {
