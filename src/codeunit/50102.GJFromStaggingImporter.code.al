@@ -1,257 +1,387 @@
-codeunit 50501 "GJ From Staging Importer"
+codeunit 50510 "GJ From Staging Importer"
 {
-
+    TableNo = "GJ Staging Header";
 
     procedure RunFromStaging(UploadId: Guid)
     var
-        H: Record "GJ Staging Header";
-        L: Record "GJ Staging Line";
+        StagingHdr: Record "GJ Staging Header";
+        StagingLine: Record "GJ Staging Line";
         Tmpl: Record "GJ Import Template";
-        Map: Record "GJ Import Column Map";
-        GLMap: Record "GJ GL Mapping";
-        DimMap: Record "GJ Dimension Mapping";
-        GenJnlLine: Record "Gen. Journal Line";
-        TempDimSet: Record "Dimension Set Entry" temporary;
-        DimMgt: Codeunit DimensionManagement;
-
-        acctType: Enum "Gen. Journal Account Type";
-        acctNo: Code[20];
-        acctNoMapped: Code[20];
-        balAcctNo: Code[20];
-        curCode: Code[10];
-        docNo: Code[20];
-        descr: Text[100];
-        postDate: Date;
-        amount: Decimal;
-        lineHasData: Boolean;
-        colVal: Text;
+        ColMap: Record "GJ Import Column Map";
+        DimMap: Record "GJ Import Dim Map";
+        GenLine: Record "Gen. Journal Line";
+        NextLineNo: Integer;
     begin
-        if not H.Get(UploadId) then
-            Error('Staging header not found.');
+        if not StagingHdr.Get(UploadId) then
+            Error('No staging header for %1', UploadId);
 
-        if (H."Template Code" = '') and (H."New Template Name" = '') then
-            Error('No template assigned.');
+        if not Tmpl.Get(StagingHdr."Template Code") then
+            Error('Template %1 not found', StagingHdr."Template Code");
 
-        if not Tmpl.Get(ChooseTemplateCode(H)) then
-            Error('Template %1 not found.', ChooseTemplateCode(H));
+        // Validate journal setup
+        Tmpl.TestField("Gen. Jnl. Template Name");
+        Tmpl.TestField("Gen. Jnl. Batch Name");
 
-        // Validate journal batch is set
-        if (Tmpl."Gen. Jnl. Template Name" = '') or (Tmpl."Gen. Jnl. Batch Name" = '') then
-            Error('Please set Gen. Journal Template/Batch on template %1 before importing.', Tmpl.Code);
+        StagingLine.Reset();
+        StagingLine.SetRange("Upload Id", UploadId);
 
-        // Ensure mapping exists
-        Map.Reset();
-        Map.SetRange("Template Code", Tmpl.Code);
-        if not Map.FindFirst() then
-            Error('No Column Mapping found for template %1.', Tmpl.Code);
-
-        // Iterate staged lines
-        L.Reset();
-        L.SetRange("Upload Id", UploadId);
-        if L.FindSet() then
+        if StagingLine.FindSet() then begin
             repeat
-                Clear(acctType);
-                Clear(acctNo);
-                Clear(acctNoMapped);
-                Clear(balAcctNo);
-                Clear(curCode);
-                Clear(docNo);
-                Clear(descr);
-                Clear(postDate);
-                amount := 0;
-                if not TempDimSet.IsEmpty() then TempDimSet.DeleteAll();
-                lineHasData := false;
+                Clear(GenLine);
+                GenLine.Init();
+                GenLine."Journal Template Name" := Tmpl."Gen. Jnl. Template Name";
+                GenLine."Journal Batch Name" := Tmpl."Gen. Jnl. Batch Name";
+                GenLine."Line No." := GetNextLineNo(Tmpl."Gen. Jnl. Template Name", Tmpl."Gen. Jnl. Batch Name");
+                GenLine."Posting Date" := Tmpl."Default Posting Date"; // fallback
 
-                Map.Reset();
-                Map.SetRange("Template Code", Tmpl.Code);
-                if Map.FindSet() then
+                // === Map core fields using Column Map ===
+                ColMap.SetRange("Template Code", Tmpl.Code);
+                if ColMap.FindSet() then
                     repeat
-                        colVal := GetCol(L, Map."Column Index");
-                        lineHasData := true;
-                        //       if Map."Constant Value" <> '' then
-                        colVal := Map."Constant Value";
+                        case ColMap."Target Field No." of
+                            // Dates
+                            5:
+                                GenLine.Validate("Posting Date",
+                                    EvaluateDate(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            128:
+                                GenLine.Validate("VAT Reporting Date",
+                                   EvaluateDate(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
 
-                    // case Map."Target Field" of
-                    //     Map."Target Field"::AccountType:
-                    //         if colVal <> '' then begin
-                    //             acctType := ParseAcctType(colVal);
-                    //             lineHasData := true;
-                    //         end;
+                            // Document
+                            6:
+                                GenLine.Validate("Document Type",
+                                    EvaluateEnumDocType(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            7:
+                                GenLine.Validate("Document No.",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
 
-                    //     Map."Target Field"::AccountNo:
-                    //         begin
-                    //             acctNo := CopyStr(colVal, 1, MaxStrLen(acctNo));
-                    //             lineHasData := true;
-                    //         end;
+                            // Account
+                            3:
+                                GenLine.Validate("Account Type",
+                                    EvaluateEnumAccountType(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            4:
+                                GenLine.Validate("Account No.",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            8001:
+                                GenLine.Validate("Account Id",
+                                  GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")); // GUID (if applicable)
 
-                    //     Map."Target Field"::PostingDate:
-                    //         begin
-                    //             if colVal <> '' then Evaluate(postDate, colVal);
-                    //             lineHasData := true;
-                    //         end;
+                            // Texts
+                            8:
+                                GenLine.Validate(Description,
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            118:
+                                GenLine.Validate("Sell-to/Buy-from No.",
+                                   GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")); // acts as Account Name / Customer
+                            289:
+                                GenLine.Validate("Message to Recipient",
+                                   GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")); // comment / free text
 
-                    //     Map."Target Field"::DocumentNo:
-                    //         begin
-                    //             docNo := CopyStr(colVal, 1, MaxStrLen(docNo));
-                    //             lineHasData := true;
-                    //         end;
+                            // Currency
+                            12:
+                                GenLine.Validate("Currency Code",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            61:
+                                GenLine.Validate("EU 3-Party Trade",
+                                    EvaluateBool(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
 
-                    //     Map."Target Field"::Description:
-                    //         begin
-                    //             descr := CopyStr(colVal, 1, MaxStrLen(descr));
-                    //             lineHasData := true;
-                    //         end;
+                            // Posting groups
+                            57:
+                                GenLine.Validate("Gen. Posting Type",
+                                    EvaluateEnumPostingType(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            58:
+                                GenLine.Validate("Gen. Bus. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            59:
+                                GenLine.Validate("Gen. Prod. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            90:
+                                GenLine.Validate("VAT Bus. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            91:
+                                GenLine.Validate("VAT Prod. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
 
-                    //     Map."Target Field"::Amount:
-                    //         begin
-                    //             if colVal <> '' then Evaluate(amount, colVal);
-                    //             lineHasData := true;
-                    //         end;
+                            // Amounts
+                            13:
+                                GenLine.Validate(Amount,
+                                    EvaluateDecimal(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            16:
+                                GenLine.Validate("Amount (LCY)",
+                                    EvaluateDecimal(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
 
-                    //     Map."Target Field"::BalAccountNo:
-                    //         begin
-                    //             balAcctNo := CopyStr(colVal, 1, MaxStrLen(balAcctNo));
-                    //             lineHasData := true;
-                    //         end;
+                            // Balancing
+                            63:
+                                GenLine.Validate("Bal. Account Type",
+                                    EvaluateEnumAccountType(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            11:
+                                GenLine.Validate("Bal. Account No.",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            2678:
+                                GenLine.Validate("Allocation Account No.",
+                                  GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            2676:
+                                GenLine.Validate("Selected Alloc. Account No.",
+                                  GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            2677:
+                                GenLine.Validate("Alloc. Acc. Modified by User",
+                                  EvaluateBool(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            6210:
+                                GenLine.Validate("Bal. Gen. Posting Type",
+                                  EvaluateEnumPostingType(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
+                            65:
+                                GenLine.Validate("Bal. Gen. Bus. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            92:
+                                GenLine.Validate("Bal. VAT Bus. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
+                            66:
+                                GenLine.Validate("Bal. Gen. Prod. Posting Group",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
 
-                    //     Map."Target Field"::CurrencyCode:
-                    //         begin
-                    //             curCode := CopyStr(colVal, 1, MaxStrLen(curCode));
-                    //             lineHasData := true;
-                    //         end;
+                            // Deferral
+                            1700:
+                                GenLine.Validate("Deferral Code",
+                                  GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
 
-                    //     Map."Target Field"::Dimension:
-                    //         if (Map."Dimension Code" <> '') and (colVal <> '') then begin
-                    //             if DimMap.Get(Map."Dimension Code", colVal) then
-                    //                 AddDim(TempDimSet, Map."Dimension Code", DimMap."Dimension Value Code")
-                    //             else
-                    //                 AddDim(TempDimSet, Map."Dimension Code", CopyStr(colVal, 1, 20)); // fallback
-                    //         end;
-                    //end;
-                    until Map.Next() = 0;
+                            // Boolean
+                            73:
+                                GenLine.Validate(Correction,
+                                    EvaluateBool(GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")));
 
-                if not lineHasData then
-                    continue;
+                            // Comment
+                            5618:
+                                GenLine.Validate(Comment,
+                                  GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value"));
 
-                // defaults
-                if (postDate = 0D) and (Tmpl."Default Posting Date" <> 0D) then
-                    postDate := Tmpl."Default Posting Date";
-                if (curCode = '') and (Tmpl."Currency Code" <> '') then
-                    curCode := Tmpl."Currency Code";
+                            // Dimensions (custom – assuming mapped to shortcuts)
+                            24:
+                                GenLine.Validate("Shortcut Dimension 1 Code",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")); // Department
+                            25:
+                                GenLine.Validate("Shortcut Dimension 2 Code",
+                                    GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value")); // Project
+                                                                                                            // Other custom dims like Customer Group, Area, Business Group, Sales Campaign can be validated via Dimension Map
+                        end;
 
-                // GL mapping if G/L Account
-                if acctType = acctType::"G/L Account" then begin
-                    acctNoMapped := acctNo;
-                    if (acctNo <> '') and GLMap.Get(acctNo) then
-                        acctNoMapped := GLMap."G/L Account No.";
-                end else
-                    acctNoMapped := acctNo;
 
-                // Insert journal line
-                GenJnlLine.Init();
-                GenJnlLine.Validate("Journal Template Name", Tmpl."Gen. Jnl. Template Name");
-                GenJnlLine.Validate("Journal Batch Name", Tmpl."Gen. Jnl. Batch Name");
-                if postDate <> 0D then GenJnlLine.Validate("Posting Date", postDate);
-                if docNo <> '' then GenJnlLine.Validate("Document No.", docNo);
-                if descr <> '' then GenJnlLine.Validate(Description, descr);
-                if curCode <> '' then GenJnlLine.Validate("Currency Code", curCode);
+                    until ColMap.Next() = 0;
 
-                // if acctType <> acctType::" " then
-                //     GenJnlLine.Validate("Account Type", acctType)
-                // else
-                //     GenJnlLine.Validate("Account Type", GenJnlLine."Account Type"::"G/L Account");
+                // === Map Dimensions using Dimension Map ===
+                DimMap.SetRange("Template Code", Tmpl.Code);
+                if DimMap.FindSet() then
+                    repeat
+                        if DimMap."Column Index" <> 0 then begin
+                            GenLine.ValidateShortcutDimCode(
+                                GetDimShortcutNo(DimMap."Dimension Code"),
+                                DimMap."Dimension Code");
+                        end;
+                    until DimMap.Next() = 0;
 
-                if acctNoMapped <> '' then GenJnlLine.Validate("Account No.", acctNoMapped);
-                if balAcctNo <> '' then GenJnlLine.Validate("Bal. Account No.", balAcctNo);
-                if amount <> 0 then GenJnlLine.Validate(Amount, amount);
+                GenLine.Insert(true);
+                NextLineNo += 10000;
 
-                ApplyDims(DimMgt, TempDimSet, GenJnlLine);
-                GenJnlLine.Insert(true);
-
-            until L.Next() = 0;
+            until StagingLine.Next() = 0;
+        end;
     end;
 
-    local procedure ChooseTemplateCode(H: Record "GJ Staging Header"): Code[20]
+    local procedure GetValue(StagingLine: Record "GJ Staging Line"; ColIdx: Integer; ConstVal: Text): Text
     begin
-        if H."Template Code" <> '' then
-            exit(H."Template Code");
-        exit(H."New Template Name");
-    end;
+        if ConstVal <> '' then
+            exit(ConstVal);
 
-    local procedure GetCol(L: Record "GJ Staging Line"; Index: Integer): Text
-    begin
-        case Index of
+        case ColIdx of
             1:
-                exit(L."Col1");
+                exit(StagingLine."Col1");
             2:
-                exit(L."Col2");
+                exit(StagingLine."Col2");
             3:
-                exit(L."Col3");
+                exit(StagingLine."Col3");
             4:
-                exit(L."Col4");
+                exit(StagingLine."Col4");
             5:
-                exit(L."Col5");
+                exit(StagingLine."Col5");
             6:
-                exit(L."Col6");
+                exit(StagingLine."Col6");
             7:
-                exit(L."Col7");
+                exit(StagingLine."Col7");
             8:
-                exit(L."Col8");
+                exit(StagingLine."Col8");
             9:
-                exit(L."Col9");
+                exit(StagingLine."Col9");
             10:
-                exit(L."Col10");
+                exit(StagingLine."Col10");
             11:
-                exit(L."Col11");
+                exit(StagingLine."Col11");
             12:
-                exit(L."Col12");
+                exit(StagingLine."Col12");
             13:
-                exit(L."Col13");
+                exit(StagingLine."Col13");
             14:
-                exit(L."Col14");
+                exit(StagingLine."Col14");
             15:
-                exit(L."Col15");
+                exit(StagingLine."Col15");
             16:
-                exit(L."Col16");
+                exit(StagingLine."Col16");
             17:
-                exit(L."Col17");
+                exit(StagingLine."Col17");
             18:
-                exit(L."Col18");
+                exit(StagingLine."Col18");
             19:
-                exit(L."Col19");
+                exit(StagingLine."Col19");
             20:
-                exit(L."Col20");
+                exit(StagingLine."Col20");
         end;
         exit('');
     end;
 
-    local procedure ParseAcctType(v: Text): Enum "Gen. Journal Account Type"
+    local procedure EvaluateEnumAccountType(ValueTxt: Text): Enum "Gen. Journal Account Type"
     var
-        e: Enum "Gen. Journal Account Type";
-        u: Text;
+        EnumVal: Enum "Gen. Journal Account Type";
+        IntVal: Integer;
     begin
-        u := UpperCase(DelChr(v, '<>'));
-        if (u = 'G/L') or (u = 'GL') or (u = 'G/L ACCOUNT') then exit(e::"G/L Account");
-        if (u = 'VENDOR') or (u = 'SUPPLIER') then exit(e::Vendor);
-        if (u = 'CUSTOMER') then exit(e::Customer);
-        if (u = 'BANK') or (u = 'BANK ACCOUNT') then exit(e::"Bank Account");
-        exit(e::"G/L Account");
+        if ValueTxt = '' then
+            exit(EnumVal::"G/L Account"); // default if empty
+        // Otherwise match by text (case-insensitive)
+        case UpperCase(ValueTxt) of
+            'G/L', 'G/L ACCOUNT', 'GL', 'GL ACCOUNT':
+                exit(EnumVal::"G/L Account");
+            'CUSTOMER':
+                exit(EnumVal::Customer);
+            'VENDOR':
+                exit(EnumVal::Vendor);
+            'BANK', 'BANK ACCOUNT':
+                exit(EnumVal::"Bank Account");
+            'FIXED ASSET':
+                exit(EnumVal::"Fixed Asset");
+            'IC', 'IC PARTNER':
+                exit(EnumVal::"IC Partner");
+            'EMPLOYEE':
+                exit(EnumVal::Employee);
+            'ALLOCATION', 'ALLOCATION ACCOUNT':
+                exit(EnumVal::"Allocation Account");
+            else
+                Error('Invalid Account Type text value: %1. Expected one of: G/L, Customer, Vendor, Bank, Fixed Asset, IC Partner, Employee, Allocation Account.', ValueTxt);
+        end;
     end;
 
-    local procedure AddDim(var TempSet: Record "Dimension Set Entry" temporary; DimCode: Code[20]; DimValue: Code[20])
+
+    local procedure EvaluateDate(ValueTxt: Text): Date
     var
-        DimMgt: Codeunit DimensionManagement;
+        D: Date;
     begin
-        if (DimCode = '') or (DimValue = '') then exit;
-        //DimMgt.AddDimToDimSet(TempSet, DimCode, DimValue);
+        if ValueTxt = '' then
+            exit(0D);
+        if not Evaluate(D, ValueTxt) then
+            Error('Invalid Posting Date: %1', ValueTxt);
+        exit(D);
     end;
 
-    local procedure ApplyDims(var DimMgt: Codeunit DimensionManagement; var TempSet: Record "Dimension Set Entry" temporary; var Line: Record "Gen. Journal Line")
+    local procedure EvaluateDecimal(ValueTxt: Text): Decimal
     var
-        id: Integer;
+        Dec: Decimal;
     begin
-        if TempSet.IsEmpty() then exit;
-        id := DimMgt.GetDimensionSetID(TempSet);
-        if id <> 0 then Line.Validate("Dimension Set ID", id);
+        if ValueTxt = '' then
+            exit(0);
+        if not Evaluate(Dec, ValueTxt) then
+            Error('Invalid Amount: %1', ValueTxt);
+        exit(Dec);
+    end;
+
+
+    local procedure GetDimShortcutNo(DimCode: Code[20]): Integer
+    var
+        GLSetup: Record "General Ledger Setup";
+    begin
+        if not GLSetup.Get() then
+            Error('General Ledger Setup not found.');
+
+        if GLSetup."Shortcut Dimension 1 Code" = DimCode then
+            exit(1);
+        if GLSetup."Shortcut Dimension 2 Code" = DimCode then
+            exit(2);
+        if GLSetup."Shortcut Dimension 3 Code" = DimCode then
+            exit(3);
+        if GLSetup."Shortcut Dimension 4 Code" = DimCode then
+            exit(4);
+        if GLSetup."Shortcut Dimension 5 Code" = DimCode then
+            exit(5);
+        if GLSetup."Shortcut Dimension 6 Code" = DimCode then
+            exit(6);
+        if GLSetup."Shortcut Dimension 7 Code" = DimCode then
+            exit(7);
+        if GLSetup."Shortcut Dimension 8 Code" = DimCode then
+            exit(8);
+
+        Error('Dimension %1 is not defined as a Shortcut Dimension (1–8). Please configure it in General Ledger Setup.', DimCode);
+    end;
+
+    local procedure GetNextLineNo(TemplateName: Code[20]; BatchName: Code[20]): Integer
+    var
+        JnlLine: Record "Gen. Journal Line";
+    begin
+        JnlLine.SetRange("Journal Template Name", TemplateName);
+        JnlLine.SetRange("Journal Batch Name", BatchName);
+        if JnlLine.FindLast() then
+            exit(JnlLine."Line No." + 10000)
+        else
+            exit(10000);
+    end;
+
+    local procedure EvaluateEnumDocType(ValueTxt: Text): Enum "Gen. Journal Document Type"
+    var
+        EnumVal: Enum "Gen. Journal Document Type";
+        IntVal: Integer;
+    begin
+        if ValueTxt = '' then
+            exit(EnumVal::" "); // blank
+        case UpperCase(ValueTxt) of
+            'PAYMENT':
+                exit(EnumVal::Payment);
+            'INVOICE':
+                exit(EnumVal::Invoice);
+            'CREDIT MEMO', 'CREDIT':
+                exit(EnumVal::"Credit Memo");
+            'FINANCE CHARGE':
+                exit(EnumVal::"Finance Charge Memo");
+            'REMINDER':
+                exit(EnumVal::Reminder);
+            'REFUND':
+                exit(EnumVal::Refund);
+            else
+                Error('Invalid Document Type: %1', ValueTxt);
+        end;
+    end;
+
+    local procedure EvaluateBool(ValueTxt: Text): Boolean
+    begin
+        case UpperCase(ValueTxt) of
+            'YES', 'Y', 'TRUE', '1':
+                exit(true);
+            'NO', 'N', 'FALSE', '0':
+                exit(false);
+        end;
+        exit(false);
+    end;
+
+    local procedure EvaluateEnumPostingType(ValueTxt: Text): Enum "General Posting Type"
+    var
+        EnumVal: Enum "General Posting Type";
+        IntVal: Integer;
+    begin
+        if ValueTxt = '' then
+            exit(EnumVal::" ");
+
+
+        case UpperCase(ValueTxt) of
+            'SALE':
+                exit(EnumVal::Sale);
+            'PURCHASE':
+                exit(EnumVal::Purchase);
+            'SETTLEMENT':
+                exit(EnumVal::Settlement);
+            else
+                exit(EnumVal::" ");
+        end;
     end;
 }
