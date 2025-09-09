@@ -11,6 +11,11 @@ codeunit 50510 "GJ From Staging Importer"
         DimMap: Record "GJ Import Dim Map";
         GenLine: Record "Gen. Journal Line";
         NextLineNo: Integer;
+        DimValueCode: Code[20];
+        DimensionIndex: Integer;
+        DimSetEntry: Record "Dimension Set Entry" temporary;
+        DimMgt: Codeunit DimensionManagement;
+        NewDimSetID: Integer;
     begin
         if not StagingHdr.Get(UploadId) then
             Error('No staging header for %1', UploadId);
@@ -166,18 +171,39 @@ codeunit 50510 "GJ From Staging Importer"
 
 
                     until ColMap.Next() = 0;
-
-                // === Map Dimensions using Dimension Map ===
                 DimMap.SetRange("Template Code", Tmpl.Code);
                 if DimMap.FindSet() then
                     repeat
                         if DimMap."Column Index" <> 0 then begin
-                            GenLine.ValidateShortcutDimCode(
-                                GetDimShortcutNo(DimMap."Dimension Code"),
-                                DimMap."Dimension Code");
+                            DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
+                            GenLine.ValidateShortcutDimCode(GetDimShortcutNo(DimMap."Dimension Code"), DimValueCode);
                         end;
                     until DimMap.Next() = 0;
+                // === Map Dimensions using Dimension Map ===
+                // DimMap.SetRange("Template Code", Tmpl.Code);
+                // DimensionIndex := 1;
+                // if DimMap.FindSet() then
+                //     repeat
+                //         if DimMap."Column Index" <> 0 then begin
+                //             DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
 
+                //             if DimensionIndex <= 2 then begin
+                //                 GenLine.ValidateShortcutDimCode(GetDimShortcutNo(DimMap."Dimension Code"), DimValueCode);
+                //             end else begin
+                //                 // Custom handling for extra dims
+                //                 DimSetEntry.Init();
+                //                 DimSetEntry.Validate("Dimension Code"); := DimMap."Dimension Code";
+                //                 DimSetEntry."Dimension Value Code" := DimValueCode;
+                //                 DimSetEntry.Insert();
+                //             end;
+                //             DimensionIndex := DimensionIndex + 1;
+
+                //         end;
+                //     until DimMap.Next() = 0;
+                // if not DimSetEntry.IsEmpty() then begin
+                //     NewDimSetID := DimMgt.GetDimensionSetID(DimSetEntry);
+                //     GenLine.Validate("Dimension Set ID", NewDimSetID);
+                // end;
                 GenLine.Insert(true);
                 NextLineNo += 10000;
 
