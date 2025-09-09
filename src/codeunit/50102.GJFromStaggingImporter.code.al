@@ -171,42 +171,48 @@ codeunit 50510 "GJ From Staging Importer"
 
 
                     until ColMap.Next() = 0;
-                DimMap.SetRange("Template Code", Tmpl.Code);
-                if DimMap.FindSet() then
-                    repeat
-                        if DimMap."Column Index" <> 0 then begin
-                            DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
-                            GenLine.ValidateShortcutDimCode(GetDimShortcutNo(DimMap."Dimension Code"), DimValueCode);
-                        end;
-                    until DimMap.Next() = 0;
-                // === Map Dimensions using Dimension Map ===
                 // DimMap.SetRange("Template Code", Tmpl.Code);
-                // DimensionIndex := 1;
                 // if DimMap.FindSet() then
                 //     repeat
                 //         if DimMap."Column Index" <> 0 then begin
                 //             DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
-
-                //             if DimensionIndex <= 2 then begin
-                //                 GenLine.ValidateShortcutDimCode(GetDimShortcutNo(DimMap."Dimension Code"), DimValueCode);
-                //             end else begin
-                //                 // Custom handling for extra dims
-                //                 DimSetEntry.Init();
-                //                 DimSetEntry.Validate("Dimension Code"); := DimMap."Dimension Code";
-                //                 DimSetEntry."Dimension Value Code" := DimValueCode;
-                //                 DimSetEntry.Insert();
-                //             end;
-                //             DimensionIndex := DimensionIndex + 1;
-
+                //             GenLine.ValidateShortcutDimCode(GetDimShortcutNo(DimMap."Dimension Code"), DimValueCode);
                 //         end;
                 //     until DimMap.Next() = 0;
-                // if not DimSetEntry.IsEmpty() then begin
-                //     NewDimSetID := DimMgt.GetDimensionSetID(DimSetEntry);
-                //     GenLine.Validate("Dimension Set ID", NewDimSetID);
-                // end;
+                // === Map Dimensions using Dimension Map ===
                 GenLine.Insert(true);
-                NextLineNo += 10000;
 
+                DimMap.SetRange("Template Code", Tmpl.Code);
+                Clear(DimSetEntry);
+                DimSetEntry.DELETEALL;
+
+                DimensionIndex := 1;
+                if DimMap.FindSet() then
+                    repeat
+                        if DimMap."Column Index" <> 0 then begin
+                            DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
+
+                            if DimensionIndex <= 2 then begin
+                                GenLine.ValidateShortcutDimCode(GetDimShortcutNo(DimMap."Dimension Code"), DimValueCode);
+                            end else begin
+                                // Custom handling for extra dims
+                                DimSetEntry.Init();
+                                DimSetEntry."Dimension Set ID" := 0;
+                                DimSetEntry.Validate("Dimension Code", DimMap."Dimension Code");
+                                DimSetEntry.Validate("Dimension Value Code", DimValueCode);
+                                DimSetEntry.Insert();
+                            end;
+                            DimensionIndex := DimensionIndex + 1;
+
+                        end;
+                    until DimMap.Next() = 0;
+                if not DimSetEntry.IsEmpty() then begin
+                    NewDimSetID := DimMgt.GetDimensionSetID(DimSetEntry);
+                    GenLine.Validate("Dimension Set ID", NewDimSetID);
+                end;
+                GenLine.Modify(true);
+                NextLineNo += 10000;
+            // Commit();
             until StagingLine.Next() = 0;
         end;
     end;
