@@ -180,10 +180,8 @@ codeunit 50510 "GJ From Staging Importer"
                 //         end;
                 //     until DimMap.Next() = 0;
                 // === Map Dimensions using Dimension Map ===
-                GenLine.Insert(true);
-
                 DimMap.SetRange("Template Code", Tmpl.Code);
-                Clear(DimSetEntry);
+                //Clear(DimSetEntry);
                 DimSetEntry.DELETEALL;
 
                 DimensionIndex := 1;
@@ -210,7 +208,7 @@ codeunit 50510 "GJ From Staging Importer"
                     NewDimSetID := DimMgt.GetDimensionSetID(DimSetEntry);
                     GenLine.Validate("Dimension Set ID", NewDimSetID);
                 end;
-                GenLine.Modify(true);
+                GenLine.Insert(true);
                 NextLineNo += 10000;
             // Commit();
             until StagingLine.Next() = 0;
