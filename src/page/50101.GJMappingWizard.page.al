@@ -11,6 +11,7 @@ page 50501 "GJ Mapping Wizard"
             group(Info)
             {
                 field("Upload Id"; Rec."Upload Id") { ApplicationArea = All; Editable = false; }
+                field("Template Code"; Rec."Template Code") { ApplicationArea = All; Editable = false; }
                 field("File Name"; Rec."File Name") { ApplicationArea = All; Editable = false; }
                 field("Sheet Name"; Rec."Sheet Name") { ApplicationArea = All; Editable = false; }
                 field("First Data Row"; Rec."First Data Row") { ApplicationArea = All; Editable = false; }
@@ -59,6 +60,25 @@ page 50501 "GJ Mapping Wizard"
                     Engine.RunFromStaging(Rec."Upload Id");
 
                     Message('Imported to journal using template %1. Open your General Journal batch to review and post.', tmplCode);
+                end;
+            }
+            action(OpenTemplate)
+            {
+                Caption = 'Open Template Card';
+                ApplicationArea = All;
+                Image = Card;
+
+                trigger OnAction()
+                var
+                    Tmpl: Record "GJ Import Template";
+                begin
+                    if Rec."Template Code" = '' then
+                        Error('No Template Code assigned yet.');
+
+                    if not Tmpl.Get(Rec."Template Code") then
+                        Error('Template %1 not found.', Rec."Template Code");
+
+                    PAGE.Run(PAGE::"GJ Import Template Card", Tmpl);
                 end;
             }
         }
