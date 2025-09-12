@@ -127,4 +127,9 @@ codeunit 50503 "GJ Import Utils"
         else
             exit(10000);
     end;
+
+    procedure GetGJStagingLineColOneFieldRef(): Integer
+    begin
+        exit(3);
+    end;
 }

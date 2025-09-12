@@ -2,7 +2,6 @@ codeunit 50510 "GJ From Staging Importer"
 {
     var
         ImportUtils: Codeunit "GJ Import Utils";
-
     procedure RunFromStaging(UploadId: Guid)
     var
         StagingHdr: Record "GJ Staging Header";
@@ -200,55 +199,21 @@ codeunit 50510 "GJ From Staging Importer"
         end;
     end;
 
-
-    local procedure GetValue(StagingLine: Record "GJ Staging Line"; ColIdx: Integer; ConstVal: Text): Text
+    local procedure GetValue(StagingLine: Record "GJ Staging Line"; ColIndex: Integer; ConstVal: Text): Text
+    var
+        RecRef: RecordRef;
+        FldRef: FieldRef;
+        BaseFieldId: Integer;
     begin
         if ConstVal <> '' then
             exit(ConstVal);
 
-        case ColIdx of
-            1:
-                exit(StagingLine."Col1");
-            2:
-                exit(StagingLine."Col2");
-            3:
-                exit(StagingLine."Col3");
-            4:
-                exit(StagingLine."Col4");
-            5:
-                exit(StagingLine."Col5");
-            6:
-                exit(StagingLine."Col6");
-            7:
-                exit(StagingLine."Col7");
-            8:
-                exit(StagingLine."Col8");
-            9:
-                exit(StagingLine."Col9");
-            10:
-                exit(StagingLine."Col10");
-            11:
-                exit(StagingLine."Col11");
-            12:
-                exit(StagingLine."Col12");
-            13:
-                exit(StagingLine."Col13");
-            14:
-                exit(StagingLine."Col14");
-            15:
-                exit(StagingLine."Col15");
-            16:
-                exit(StagingLine."Col16");
-            17:
-                exit(StagingLine."Col17");
-            18:
-                exit(StagingLine."Col18");
-            19:
-                exit(StagingLine."Col19");
-            20:
-                exit(StagingLine."Col20");
-        end;
-        exit('');
-    end;
+        if (ColIndex < 1) or (ColIndex > 50) then
+            Error('Column index %1 is out of supported range (1..50).', ColIndex);
 
+        BaseFieldId := ImportUtils.GetGJStagingLineColOneFieldRef(); // same starting field number as above
+        RecRef.GetTable(StagingLine);
+        FldRef := RecRef.Field(BaseFieldId + (ColIndex - 1));
+        exit(Format(FldRef.Value));
+    end;
 }

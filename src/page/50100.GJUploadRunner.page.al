@@ -41,6 +41,9 @@ page 50500 "GJ Upload Runner"
                 Caption = 'Upload & Stage';
                 Image = Import;
                 ApplicationArea = All;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
 
                 trigger OnAction()
                 var

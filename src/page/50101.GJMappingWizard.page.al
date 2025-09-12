@@ -37,7 +37,9 @@ page 50501 "GJ Mapping Wizard"
                 Caption = 'Create Gen. Jnl Line';
                 ApplicationArea = All;
                 Image = Import;
-
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
                 trigger OnAction()
                 var
                     Work: Record "GJ Map Work";
@@ -49,7 +51,7 @@ page 50501 "GJ Mapping Wizard"
                     tmplCode := Rec."Template Code";
                     if tmplCode = '' then
                         Error('Please set an existing template or a new template name before saving mapping.');
-                        
+
                     Engine.RunFromStaging(Rec."Upload Id");
 
                     Message('Imported to journal using template %1. Open your General Journal batch to review and post.', tmplCode);
@@ -60,7 +62,9 @@ page 50501 "GJ Mapping Wizard"
                 Caption = 'Open Template Card';
                 ApplicationArea = All;
                 Image = Card;
-
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
                 trigger OnAction()
                 var
                     Tmpl: Record "GJ Import Template";

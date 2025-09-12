@@ -102,6 +102,126 @@ page 50505 "GJ Staging Line ListPart"
                 {
                     ToolTip = 'Specifies the value of the Col20 field.', Comment = '%';
                 }
+                field(Col21; Rec.Col21)
+                {
+                    ToolTip = 'Specifies the value of the Col21 field.', Comment = '%';
+                }
+                field(Col22; Rec.Col22)
+                {
+                    ToolTip = 'Specifies the value of the Col22 field.', Comment = '%';
+                }
+                field(Col23; Rec.Col23)
+                {
+                    ToolTip = 'Specifies the value of the Col23 field.', Comment = '%';
+                }
+                field(Col24; Rec.Col24)
+                {
+                    ToolTip = 'Specifies the value of the Col24 field.', Comment = '%';
+                }
+                field(Col25; Rec.Col25)
+                {
+                    ToolTip = 'Specifies the value of the Col25 field.', Comment = '%';
+                }
+                field(Col26; Rec.Col26)
+                {
+                    ToolTip = 'Specifies the value of the Col26 field.', Comment = '%';
+                }
+                field(Col27; Rec.Col27)
+                {
+                    ToolTip = 'Specifies the value of the Col27 field.', Comment = '%';
+                }
+                field(Col28; Rec.Col28)
+                {
+                    ToolTip = 'Specifies the value of the Col28 field.', Comment = '%';
+                }
+                field(Col29; Rec.Col29)
+                {
+                    ToolTip = 'Specifies the value of the Col29 field.', Comment = '%';
+                }
+                field(Col30; Rec.Col30)
+                {
+                    ToolTip = 'Specifies the value of the Col30 field.', Comment = '%';
+                }
+                field(Col31; Rec.Col31)
+                {
+                    ToolTip = 'Specifies the value of the Col31 field.', Comment = '%';
+                }
+                field(Col32; Rec.Col32)
+                {
+                    ToolTip = 'Specifies the value of the Col32 field.', Comment = '%';
+                }
+                field(Col33; Rec.Col33)
+                {
+                    ToolTip = 'Specifies the value of the Col33 field.', Comment = '%';
+                }
+                field(Col34; Rec.Col34)
+                {
+                    ToolTip = 'Specifies the value of the Col34 field.', Comment = '%';
+                }
+                field(Col35; Rec.Col35)
+                {
+                    ToolTip = 'Specifies the value of the Col35 field.', Comment = '%';
+                }
+                field(Col36; Rec.Col36)
+                {
+                    ToolTip = 'Specifies the value of the Col36 field.', Comment = '%';
+                }
+                field(Col37; Rec.Col37)
+                {
+                    ToolTip = 'Specifies the value of the Col37 field.', Comment = '%';
+                }
+                field(Col38; Rec.Col38)
+                {
+                    ToolTip = 'Specifies the value of the Col38 field.', Comment = '%';
+                }
+                field(Col39; Rec.Col39)
+                {
+                    ToolTip = 'Specifies the value of the Col39 field.', Comment = '%';
+                }
+                field(Col40; Rec.Col40)
+                {
+                    ToolTip = 'Specifies the value of the Col40 field.', Comment = '%';
+                }
+                field(Col41; Rec.Col41)
+                {
+                    ToolTip = 'Specifies the value of the Col41 field.', Comment = '%';
+                }
+                field(Col42; Rec.Col42)
+                {
+                    ToolTip = 'Specifies the value of the Col42 field.', Comment = '%';
+                }
+                field(Col43; Rec.Col43)
+                {
+                    ToolTip = 'Specifies the value of the Col43 field.', Comment = '%';
+                }
+                field(Col44; Rec.Col44)
+                {
+                    ToolTip = 'Specifies the value of the Col44 field.', Comment = '%';
+                }
+                field(Col45; Rec.Col45)
+                {
+                    ToolTip = 'Specifies the value of the Col45 field.', Comment = '%';
+                }
+                field(Col46; Rec.Col46)
+                {
+                    ToolTip = 'Specifies the value of the Col46 field.', Comment = '%';
+                }
+                field(Col47; Rec.Col47)
+                {
+                    ToolTip = 'Specifies the value of the Col47 field.', Comment = '%';
+                }
+                field(Col48; Rec.Col48)
+                {
+                    ToolTip = 'Specifies the value of the Col48 field.', Comment = '%';
+                }
+                field(Col49; Rec.Col49)
+                {
+                    ToolTip = 'Specifies the value of the Col49 field.', Comment = '%';
+                }
+                field(Col50; Rec.Col50)
+                {
+                    ToolTip = 'Specifies the value of the Col50 field.', Comment = '%';
+                }
             }
         }
     }

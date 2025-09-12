@@ -1,15 +1,14 @@
 codeunit 50500 "GJ Staging Loader"
 {
-
     var
         TempExcelBuffer: Record "Excel Buffer" temporary;
         FileName: Text[250];
         SheetName: Text[100];
         MaxRowNo: Integer;
-
         UploadExcelMsg: Label 'Select Excel file (.xlsx) to import';
         NoFileFoundMsg: Label 'No file selected.';
         ExcelImportSuccessLbl: Label 'Excel import finished. %1 rows processed.';
+        ImportUtils: Codeunit "GJ Import Utils";
 
     procedure ReadExcelSheet(TemplateCode: Code[20]; NewTemplate: Code[20];
                     FileName: Text; SheetNameIn: Text;
@@ -86,7 +85,7 @@ codeunit 50500 "GJ Staging Loader"
             L.Init();
             L."Upload Id" := UploadId;
             L."Row No." := RowIdx;
-            for ColIdx := 1 to 20 do begin
+            for ColIdx := 1 to 50 do begin
                 if ColIdx > LastCol then break;
                 SetColByIndex(L, ColIdx, GetValueAtCell(RowIdx, ColIdx));
             end;
@@ -121,49 +120,18 @@ codeunit 50500 "GJ Staging Loader"
     end;
 
     local procedure SetColByIndex(var L: Record "GJ Staging Line"; ColIndex: Integer; Val: Text)
+    var
+        RecRef: RecordRef;
+        FldRef: FieldRef;
+        BaseFieldId: Integer;
     begin
-        case ColIndex of
-            1:
-                L."Col1" := Val;
-            2:
-                L."Col2" := Val;
-            3:
-                L."Col3" := Val;
-            4:
-                L."Col4" := Val;
-            5:
-                L."Col5" := Val;
-            6:
-                L."Col6" := Val;
-            7:
-                L."Col7" := Val;
-            8:
-                L."Col8" := Val;
-            9:
-                L."Col9" := Val;
-            10:
-                L."Col10" := Val;
-            11:
-                L."Col11" := Val;
-            12:
-                L."Col12" := Val;
-            13:
-                L."Col13" := Val;
-            14:
-                L."Col14" := Val;
-            15:
-                L."Col15" := Val;
-            16:
-                L."Col16" := Val;
-            17:
-                L."Col17" := Val;
-            18:
-                L."Col18" := Val;
-            19:
-                L."Col19" := Val;
-            20:
-                L."Col20" := Val;
-        end;
+        if (ColIndex < 1) or (ColIndex > 50) then
+            Error('Column index %1 is out of supported range (1..50).', ColIndex);
+        RecRef.GetTable(L);
+        BaseFieldId := ImportUtils.GetGJStagingLineColOneFieldRef();
+        FldRef := RecRef.Field((BaseFieldId + (ColIndex - 1)));
+        FldRef.Value := Val;
+        RecRef.SetTable(L);
     end;
 
     local procedure CalcMaxRowAndCol(var OutLastRow: Integer; var OutLastCol: Integer)

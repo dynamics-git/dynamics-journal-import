@@ -55,6 +55,9 @@ page 50503 "GJ Import Template Card"
                 Caption = 'Upload & Import';
                 Image = ImportExcel;
                 ApplicationArea = All;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
                 trigger OnAction()
                 var
                     Runner: Page "GJ Upload Runner";
