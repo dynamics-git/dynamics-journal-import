@@ -17,7 +17,7 @@ page 50503 "GJ Import Template Card"
                         if Rec.Code <> '' then begin
                             CurrPage.Map.PAGE.SetTemplateCode(Rec.Code);
                             CurrPage.DimMap.PAGE.SetTemplateCode(Rec.Code);
-                            EnsureDimMappingExists(Rec.Code);
+                            TmplMgt.EnsureDimMappingExists(Rec.Code);
                         end;
                     end;
                 }
@@ -71,30 +71,12 @@ page 50503 "GJ Import Template Card"
         if Rec.Code <> '' then begin
             CurrPage.Map.PAGE.SetTemplateCode(Rec.Code);
             CurrPage.DimMap.PAGE.SetTemplateCode(Rec.Code);
-            EnsureDimMappingExists(Rec.Code);
+            TmplMgt.EnsureDimMappingExists(Rec.Code);
         end;
 
     end;
 
-
-    local procedure EnsureDimMappingExists(TemplateCode: Code[20])
     var
-        Dim: Record Dimension;
-        Map: Record "GJ Import Dim Map";
-    begin
-        // Loop all dimensions
-        if Dim.FindSet() then
-            repeat
-                if not Map.Get(TemplateCode, Dim.Code) then begin
-                    Map.Init();
-                    Map."Template Code" := TemplateCode;
-                    Map."Dimension Code" := Dim.Code;
-                    Map."Column Index" := 0; // empty until user assigns
-                    Map."Constant Value" := '';
-                    Map.Insert();
-                end;
-            until Dim.Next() = 0;
-    end;
-
+        TmplMgt: Codeunit "GJ Template Management";
 
 }

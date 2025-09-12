@@ -19,7 +19,6 @@ table 50501 "GJ Import Column Map"
             Caption = 'Target Field Caption';
             Editable = false;
         }
-        field(5; "Dimension Code"; Code[20]) { TableRelation = Dimension.Code; }
         field(6; "Constant Value"; Text[100]) { }
         field(7; "Notes"; Text[100]) { }
     }

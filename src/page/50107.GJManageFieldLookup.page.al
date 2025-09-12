@@ -31,7 +31,6 @@ page 50507 "GJ Manage Field Lookup"
                                     if R.Selected and (R."Processing Order" > MaxOrder) then
                                         MaxOrder := R."Processing Order";
                                 until R.Next() = 0;
-
                             Rec."Processing Order" := MaxOrder + 1;
                         end;
                     end;
@@ -48,54 +47,9 @@ page 50507 "GJ Manage Field Lookup"
         TemplateCodeCtx: Code[20];
 
     trigger OnOpenPage()
-    var
-        F: Record Field;
-        Map: Record "GJ Import Column Map";
-        OrderNo: Integer;
+
     begin
-        Rec.Reset();
-        Rec.DeleteAll();
-
-        // preload existing mapping for this template
-        Map.SetRange("Template Code", TemplateCodeCtx);
-
-        // STEP 1: Load mapped fields first (keep their stored order)
-        if Map.FindSet() then
-            repeat
-                if F.Get(81, Map."Target Field No.") then begin
-                    Rec.Init();
-                    Rec."Field No." := F."No.";
-                    Rec."Field Name" := F.FieldName;
-                    Rec."Field Caption" := F."Field Caption";
-                    Rec.Selected := true;
-                    Rec."Processing Order" := Map."Column Index"; // or your processing field
-                    Rec.Insert();
-                end;
-            until Map.Next() = 0;
-
-        // Find current max order
-        OrderNo := 0;
-        if Rec.FindLast() then
-            OrderNo := Rec."Processing Order";
-
-        // STEP 2: Load unmapped fields afterwards
-        F.Reset();
-        F.SetRange(TableNo, 81);
-        F.SetRange(Class, F.Class::Normal);
-
-        if F.FindSet() then
-            repeat
-                if not Rec.Get(F."No.") then begin // only insert if not already mapped
-                    OrderNo += 1;
-                    Rec.Init();
-                    Rec."Field No." := F."No.";
-                    Rec."Field Name" := F.FieldName;
-                    Rec."Field Caption" := F."Field Caption";
-                    Rec.Selected := false;
-                    Rec."Processing Order" := 0;
-                    Rec.Insert();
-                end;
-            until F.Next() = 0;
+        TmplMgt.LoadFieldTempBuffer(TemplateCodeCtx, Rec);
     end;
 
     procedure SetTemplateCode(TemplateCode: Code[20])
@@ -106,7 +60,9 @@ page 50507 "GJ Manage Field Lookup"
     procedure GetSelections(var TempFields: Record "GJ Field Temp" temporary)
     begin
         CurrPage.SetSelectionFilter(TempFields);
-        // OR: copy all buffer back, not just selected rows
         TempFields.Copy(Rec, true);
     end;
+
+    var
+        TmplMgt: Codeunit "GJ Template Management";
 }

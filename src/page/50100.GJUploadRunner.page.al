@@ -51,9 +51,6 @@ page 50500 "GJ Upload Runner"
                     StagingHdr: Record "GJ Staging Header";
                 begin
                     UploadId := Loader.ReadExcelSheet(ExistingTemplate, NewTemplate, FileName, SheetName, HasHeader, StartRow);
-                    //Message('Staged. Upload Id: %1', UploadId);
-                    // Next UI step: open Mapping Wizard filtered by this UploadId
-                    //PAGE.RunModal(PAGE::"GJ Mapping Wizard", UploadId);
                     Commit();
                     StagingHdr.Reset();
                     StagingHdr.SetRange("Upload Id", UploadId);
