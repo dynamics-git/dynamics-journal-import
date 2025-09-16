@@ -75,6 +75,7 @@ page 50503 "GJ Import Template Card"
             CurrPage.Map.PAGE.SetTemplateCode(Rec.Code);
             CurrPage.DimMap.PAGE.SetTemplateCode(Rec.Code);
             TmplMgt.EnsureDimMappingExists(Rec.Code);
+            TmplMgt.RefreshExcelHeaders(Rec.Code);
         end;
 
     end;

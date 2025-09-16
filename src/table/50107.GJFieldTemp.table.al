@@ -11,6 +11,9 @@ table 50507 "GJ Field Temp"
         field(3; "Field Caption"; Text[100]) { }
         field(4; "Selected"; Boolean) { }
         field(5; "Processing Order"; Integer) { }
+        field(6; "Excel Header Text"; Text[250])
+        {
+        }
     }
 
     keys { key(PK; "Field No.") { Clustered = true; } }

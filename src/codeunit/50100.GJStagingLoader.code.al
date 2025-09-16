@@ -75,7 +75,8 @@ codeunit 50500 "GJ Staging Loader"
         H."Created At" := CurrentDateTime;
         H."User Id" := UserId;
         H.Insert(true);
-
+        if HasHeader then
+            StoreExcelHeaders(UploadId, TemplateCode, 1, LastCol);
         if StartRow < 1 then
             StartRow := 1;
         if HasHeader and (StartRow = 1) then
@@ -150,6 +151,31 @@ codeunit 50500 "GJ Staging Loader"
                     OutLastCol := R."Column No.";
             until R.Next() = 0;
     end;
+
+    local procedure StoreExcelHeaders(UploadId: Guid; TemplateCode: Code[20]; HeaderRowNo: Integer; LastCol: Integer)
+    var
+        HeaderMap: Record "GJ Excel Header Map";
+        Col: Integer;
+        HeaderText: Text;
+    begin
+        // Clear existing headers for this upload
+        HeaderMap.SetRange("Template Code", TemplateCode);
+        HeaderMap.DeleteAll();
+
+        // Loop through each column and capture header text
+        for Col := 1 to LastCol do begin
+            HeaderText := GetValueAtCell(HeaderRowNo, Col);
+            if HeaderText <> '' then begin
+                HeaderMap.Init();
+                HeaderMap."Upload Id" := UploadId;
+                HeaderMap."Template Code" := TemplateCode;
+                HeaderMap."Column Index" := Col;
+                HeaderMap."Header Text" := CopyStr(HeaderText, 1, MaxStrLen(HeaderMap."Header Text"));
+                HeaderMap.Insert();
+            end;
+        end;
+    end;
+
 }
 
 
