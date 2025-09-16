@@ -83,6 +83,7 @@ codeunit 50504 "GJ Template Management"
                     TempBuf."Field Caption" := F."Field Caption";
                     TempBuf.Selected := true;
                     TempBuf."Processing Order" := Map."Column Index"; // keep processing order
+                    TempBuf."Excel Header Text" := Map."Excel Header Text"; // keep processing order
                     TempBuf.Insert();
                 end;
             until Map.Next() = 0;
@@ -111,4 +112,24 @@ codeunit 50504 "GJ Template Management"
                 end;
             until F.Next() = 0;
     end;
+
+    procedure RefreshExcelHeaders(TemplateCode: Code[20])
+    var
+        Map: Record "GJ Import Column Map";
+        HeaderMap: Record "GJ Excel Header Map";
+    begin
+        Map.SetRange("Template Code", TemplateCode);
+        if Map.FindSet() then
+            repeat
+                if Map."Column Index" <> 0 then begin
+                    HeaderMap.SetRange("Template Code", TemplateCode); // link by UploadId stored in Column Map
+                    HeaderMap.SetRange("Column Index", Map."Column Index");
+                    if HeaderMap.FindFirst() then begin
+                        Map."Excel Header Text" := HeaderMap."Header Text";
+                        Map.Modify();
+                    end;
+                end;
+            until Map.Next() = 0;
+    end;
+
 }

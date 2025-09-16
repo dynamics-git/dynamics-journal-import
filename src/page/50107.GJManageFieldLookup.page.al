@@ -22,6 +22,7 @@ page 50507 "GJ Manage Field Lookup"
                         R: Record "GJ Field Temp";
                         MaxOrder: Integer;
                     begin
+                        Rec."Processing Order" := 0;
                         if Rec.Selected and (Rec."Processing Order" = 0) then begin
                             MaxOrder := 0;
                             R.Copy(Rec, true);
@@ -37,8 +38,28 @@ page 50507 "GJ Manage Field Lookup"
                 }
                 field("Field No."; Rec."Field No.") { ApplicationArea = All; Editable = false; }
                 field("Field Name"; Rec."Field Name") { ApplicationArea = All; Editable = false; }
-                field("Field Caption"; Rec."Field Caption") { ApplicationArea = All; Editable = false; }
-                field("Processing Order"; Rec."Processing Order") { ApplicationArea = All; }
+                // field("Field Caption"; Rec."Field Caption") { ApplicationArea = All; Editable = false; }
+                field("Processing Order"; Rec."Processing Order")
+                {
+                    ApplicationArea = All;
+                    Lookup = true;
+                    Caption = 'Excel Column Index';
+                    trigger OnLookup(var Text: Text): Boolean
+                    var
+                        Hdr: Record "GJ Excel Header Map";
+                    begin
+                        if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
+                            Rec."Processing Order" := Hdr."Column Index";
+                            Rec."Excel Header Text" := Hdr."Header Text"; // optional: show text for clarity
+                        end;
+                    end;
+                }
+                field("Excel Header Text"; Rec."Excel Header Text")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Shows the Excel header text for the selected column.';
+                    Editable = false;
+                }
             }
         }
     }

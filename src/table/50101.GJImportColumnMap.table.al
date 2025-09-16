@@ -12,15 +12,18 @@ table 50501 "GJ Import Column Map"
         {
             Caption = 'Target Field';
         }
-
-        // Readable caption for the chosen field (auto-filled on validate)
+        field(6; "Constant Value"; Text[100]) { }
+        field(7; "Notes"; Text[100]) { }
         field(8; "Target Field Caption"; Text[100])
         {
             Caption = 'Target Field Caption';
             Editable = false;
         }
-        field(6; "Constant Value"; Text[100]) { }
-        field(7; "Notes"; Text[100]) { }
+        field(9; "Excel Header Text"; Text[250])
+        {
+            Caption = 'Excel Header';
+            Editable = false;
+        }
     }
 
     keys { key(PK; "Template Code", "Line No.") { Clustered = true; } }

@@ -11,7 +11,32 @@ page 50502 "GJ Map Work ListPart"
         {
             repeater(G)
             {
-                field("Column Index"; Rec."Column Index") { ApplicationArea = All; }
+                field("Column Index"; Rec."Column Index")
+                {
+                    ApplicationArea = All;
+                    //             TableRelation = "GJ Excel Header Map"."Column Index"
+                    // where("Template Code" = field("Upload Id"));
+
+                    Lookup = true;
+
+                    trigger OnLookup(var Text: Text): Boolean
+                    var
+                        Hdr: Record "GJ Excel Header Map";
+                    begin
+                        if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
+                            Rec."Column Index" := Hdr."Column Index";
+                            Rec."Excel Header Text" := Hdr."Header Text"; // optional: show text for clarity
+                        end;
+                    end;
+
+
+                }
+                field("Excel Header Text"; Rec."Excel Header Text")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Shows the Excel header text for the selected column.';
+                    Editable = false;
+                }
                 field("Target Field No."; Rec."Target Field No.")
                 {
                     ToolTip = 'Specifies the value of the Target Field field.', Comment = '%';
