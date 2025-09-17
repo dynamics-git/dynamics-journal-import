@@ -21,8 +21,10 @@ page 50507 "GJ Manage Field Lookup"
                     var
                         R: Record "GJ Field Temp";
                         MaxOrder: Integer;
+                        Hdr: Record "GJ Excel Header Map";
                     begin
                         Rec."Processing Order" := 0;
+                        Rec."Excel Header Text" := '';
                         if Rec.Selected and (Rec."Processing Order" = 0) then begin
                             MaxOrder := 0;
                             R.Copy(Rec, true);
@@ -33,6 +35,12 @@ page 50507 "GJ Manage Field Lookup"
                                         MaxOrder := R."Processing Order";
                                 until R.Next() = 0;
                             Rec."Processing Order" := MaxOrder + 1;
+                        end;
+                        if Rec."Processing Order" > 0 then begin
+                            Hdr.SetRange("Template Code", TemplateCodeCtx);
+                            Hdr.SetRange("Column Index", Rec."Processing Order");
+                            if Hdr.FindFirst() then
+                                Rec."Excel Header Text" := Hdr."Header Text";
                         end;
                     end;
                 }

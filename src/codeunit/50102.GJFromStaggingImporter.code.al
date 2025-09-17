@@ -2,11 +2,17 @@ codeunit 50510 "GJ From Staging Importer"
 {
     var
         ImportUtils: Codeunit "GJ Import Utils";
+        IntegrationEvent: Codeunit "GJ Integration Event";
+
     procedure RunFromStaging(UploadId: Guid)
     var
         StagingHdr: Record "GJ Staging Header";
         Tmpl: Record "GJ Import Template";
+        IsHandled: Boolean;
     begin
+        IntegrationEvent.OnBeforeRunFromStaging(UploadId, IsHandled);
+        if IsHandled then
+            exit;
         if not StagingHdr.Get(UploadId) then
             Error('No staging header for %1', UploadId);
 
@@ -18,6 +24,7 @@ codeunit 50510 "GJ From Staging Importer"
 
         ProcessStagingLines(StagingHdr, Tmpl);
         ImportUtils.CleanupStaging(StagingHdr."Upload Id");
+        IntegrationEvent.OnAfterRunFromStaging(UploadId, Tmpl);
     end;
 
 
@@ -26,6 +33,7 @@ codeunit 50510 "GJ From Staging Importer"
         StagingLine: Record "GJ Staging Line";
         GenLine: Record "Gen. Journal Line";
     begin
+        IntegrationEvent.OnBeforeProcessStagingLines(StagingHdr, Tmpl);
         StagingLine.SetRange("Upload Id", StagingHdr."Upload Id");
 
         if not StagingLine.FindSet() then
@@ -33,8 +41,11 @@ codeunit 50510 "GJ From Staging Importer"
 
         repeat
             GenLine := BuildJournalLine(StagingLine, Tmpl);
+            IntegrationEvent.OnBeforeInsertGJGenJournalLine(GenLine, StagingLine, Tmpl);
             GenLine.Insert(true);
+            IntegrationEvent.OnAfterInsertGJGenJournalLine(GenLine, StagingLine, Tmpl);
         until StagingLine.Next() = 0;
+        IntegrationEvent.OnAfterProcessStagingLines(StagingHdr, Tmpl);
     end;
 
     local procedure BuildJournalLine(StagingLine: Record "GJ Staging Line"; Tmpl: Record "GJ Import Template"): Record "Gen. Journal Line"
@@ -50,23 +61,28 @@ codeunit 50510 "GJ From Staging Importer"
         GenLine."Journal Batch Name" := Tmpl."Gen. Jnl. Batch Name";
         GenLine."Line No." := ImportUtils.GetNextGenJnlLineNo(Tmpl."Gen. Jnl. Template Name", Tmpl."Gen. Jnl. Batch Name");
         GenLine."Posting Date" := Tmpl."Default Posting Date"; // fallback
-
+        IntegrationEvent.OnBeforeBuildJournalLine(GenLine, StagingLine, Tmpl);
         // --- Map fields ---
         ApplyColumnMapping(GenLine, StagingLine, Tmpl.Code);
         ApplyDimensionMapping(GenLine, StagingLine, Tmpl.Code);
-
+        IntegrationEvent.OnAfterBuildJournalLine(GenLine, StagingLine, Tmpl);
         exit(GenLine);
     end;
 
     local procedure ApplyColumnMapping(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; TemplateCode: Code[20])
     var
         ColMap: Record "GJ Import Column Map";
+        IsHandled: Boolean;
     begin
         ColMap.SetRange("Template Code", TemplateCode);
 
         if ColMap.FindSet() then
             repeat
-                MapColumnToJournal(GenLine, StagingLine, ColMap);
+                IsHandled := false;
+                IntegrationEvent.OnBeforeMapColumnToJournal(GenLine, StagingLine, ColMap, IsHandled);
+                if not IsHandled then
+                    MapColumnToJournal(GenLine, StagingLine, ColMap);
+                IntegrationEvent.OnAfterMapColumnToJournal(GenLine, StagingLine, ColMap);
             until ColMap.Next() = 0;
     end;
 
@@ -176,6 +192,7 @@ codeunit 50510 "GJ From Staging Importer"
         DimMgt: Codeunit DimensionManagement;
         DimValueCode: Code[20];
         NewDimSetID: Integer;
+        IsHandled: Boolean;
     begin
         DimMap.SetRange("Template Code", TemplateCode);
         DimMap.SetFilter("Column Index", '<>%1', 0);
@@ -183,14 +200,20 @@ codeunit 50510 "GJ From Staging Importer"
 
         if DimMap.FindSet() then
             repeat
-                DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
-                if DimValueCode <> '' then begin
-                    DimSetEntry.Init();
-                    DimSetEntry."Dimension Set ID" := 0;
-                    DimSetEntry.Validate("Dimension Code", DimMap."Dimension Code");
-                    DimSetEntry.Validate("Dimension Value Code", DimValueCode);
-                    DimSetEntry.Insert();
+                IsHandled := false;
+                IntegrationEvent.OnBeforeApplyDimensionEntry(DimMap, StagingLine, GenLine, IsHandled, DimSetEntry);
+
+                if not IsHandled then begin
+                    DimValueCode := CopyStr(GetValue(StagingLine, DimMap."Column Index", DimMap."Constant Value"), 1, MaxStrLen(DimValueCode));
+                    if DimValueCode <> '' then begin
+                        DimSetEntry.Init();
+                        DimSetEntry."Dimension Set ID" := 0;
+                        DimSetEntry.Validate("Dimension Code", DimMap."Dimension Code");
+                        DimSetEntry.Validate("Dimension Value Code", DimValueCode);
+                        DimSetEntry.Insert();
+                    end;
                 end;
+                IntegrationEvent.OnAfterApplyDimensionEntry(DimMap, StagingLine, GenLine, DimSetEntry);
             until DimMap.Next() = 0;
 
         if not DimSetEntry.IsEmpty() then begin
@@ -199,7 +222,9 @@ codeunit 50510 "GJ From Staging Importer"
         end;
     end;
 
-    local procedure GetValue(StagingLine: Record "GJ Staging Line"; ColIndex: Integer; ConstVal: Text): Text
+    local procedure GetValue(StagingLine: Record "GJ Staging Line";
+ColIndex: Integer;
+ConstVal: Text): Text
     var
         RecRef: RecordRef;
         FldRef: FieldRef;

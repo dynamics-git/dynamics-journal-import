@@ -9,6 +9,7 @@ codeunit 50500 "GJ Staging Loader"
         NoFileFoundMsg: Label 'No file selected.';
         ExcelImportSuccessLbl: Label 'Excel import finished. %1 rows processed.';
         ImportUtils: Codeunit "GJ Import Utils";
+        IntegrationEvent: Codeunit "GJ Integration Event";
 
     procedure ReadExcelSheet(TemplateCode: Code[20]; NewTemplate: Code[20];
                     FileName: Text; SheetNameIn: Text;
@@ -18,7 +19,11 @@ codeunit 50500 "GJ Staging Loader"
         IStream: InStream;
         FromFile: Text[100];
         UploadId: Guid;
+        IsHandled: Boolean;
     begin
+        IntegrationEvent.OnBeforeReadExcelSheet(TemplateCode, NewTemplate, FileName, SheetNameIn, HasHeader, StartRow, IsHandled, UploadId);
+        if IsHandled then
+            exit(UploadId);
         UploadIntoStream(UploadExcelMsg, '', '', FromFile, IStream);
         if FromFile <> '' then begin
             FileName := FileMgt.GetFileName(FromFile);
@@ -30,6 +35,7 @@ codeunit 50500 "GJ Staging Loader"
         TempExcelBuffer.OpenBookStream(IStream, SheetName);
         TempExcelBuffer.ReadSheet();
         UploadId := ImportExcelData(TemplateCode, NewTemplate, FileName, SheetNameIn, HasHeader, StartRow);
+        IntegrationEvent.OnAfterReadExcelSheet(TemplateCode, NewTemplate, FileName, SheetNameIn, HasHeader, StartRow, UploadId);
         exit(UploadId);
     end;
 
@@ -49,7 +55,11 @@ codeunit 50500 "GJ Staging Loader"
         RowIdx: Integer;
         ColIdx: Integer;
         StoredSheetName: Text[250];
+        IsHandled: Boolean;
     begin
+        IntegrationEvent.OnBeforeImportExcelData(TemplateCode, NewTemplate, FileName, SheetNameIn, HasHeader, StartRow, UploadId, IsHandled);
+        if IsHandled then
+            exit(UploadId);
         RowNo := 0;
         LineNo := 0;
         LastRow := 0;
@@ -75,6 +85,7 @@ codeunit 50500 "GJ Staging Loader"
         H."Created At" := CurrentDateTime;
         H."User Id" := UserId;
         H.Insert(true);
+        IntegrationEvent.OnAfterInsertStagingHeader(H);
         if HasHeader then
             StoreExcelHeaders(UploadId, TemplateCode, 1, LastCol);
         if StartRow < 1 then
@@ -86,13 +97,17 @@ codeunit 50500 "GJ Staging Loader"
             L.Init();
             L."Upload Id" := UploadId;
             L."Row No." := RowIdx;
+            IntegrationEvent.OnBeforeStagingLineBuild(L, RowIdx, LastCol);
             for ColIdx := 1 to 50 do begin
                 if ColIdx > LastCol then break;
                 SetColByIndex(L, ColIdx, GetValueAtCell(RowIdx, ColIdx));
             end;
-            L.Insert(true);
+            IntegrationEvent.OnBeforeInsertStagingLine(L, RowIdx, LastCol, IsHandled);
+            if not IsHandled then
+                L.Insert(true);
+            IntegrationEvent.OnAfterInsertStagingLine(L);
         end;
-
+        IntegrationEvent.OnAfterImportExcelData(TemplateCode, NewTemplate, FileName, SheetNameIn, HasHeader, StartRow, UploadId);
         exit(UploadId);
     end;
 
@@ -157,7 +172,12 @@ codeunit 50500 "GJ Staging Loader"
         HeaderMap: Record "GJ Excel Header Map";
         Col: Integer;
         HeaderText: Text;
+        IsHandled: Boolean;
     begin
+        IntegrationEvent.OnBeforeStoreExcelHeaders(UploadId, TemplateCode, HeaderRowNo, LastCol, IsHandled);
+        if IsHandled then
+            exit;
+
         // Clear existing headers for this upload
         HeaderMap.SetRange("Template Code", TemplateCode);
         HeaderMap.DeleteAll();
@@ -165,15 +185,19 @@ codeunit 50500 "GJ Staging Loader"
         // Loop through each column and capture header text
         for Col := 1 to LastCol do begin
             HeaderText := GetValueAtCell(HeaderRowNo, Col);
+            IntegrationEvent.OnBeforeInsertExcelHeader(UploadId, TemplateCode, Col, HeaderText);
             if HeaderText <> '' then begin
                 HeaderMap.Init();
                 HeaderMap."Upload Id" := UploadId;
                 HeaderMap."Template Code" := TemplateCode;
                 HeaderMap."Column Index" := Col;
                 HeaderMap."Header Text" := CopyStr(HeaderText, 1, MaxStrLen(HeaderMap."Header Text"));
+                IntegrationEvent.OnBeforeExcelHeaderInsert(HeaderMap);
                 HeaderMap.Insert();
+                IntegrationEvent.OnAfterExcelHeaderInsert(HeaderMap);
             end;
         end;
+        IntegrationEvent.OnAfterStoreExcelHeaders(UploadId, TemplateCode, HeaderRowNo, LastCol);
     end;
 
 }
