@@ -20,6 +20,11 @@ table 50508 "GJ Import Dim Map"
         {
             Caption = 'Excel Column (1=A, 2=B, …)';
         }
+        field(9; "Excel Header Text"; Text[250])
+        {
+            Caption = 'Excel Header';
+            Editable = false;
+        }
         field(4; "Constant Value"; Text[100])
         {
             Caption = 'Constant Value';

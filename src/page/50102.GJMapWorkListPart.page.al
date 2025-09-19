@@ -72,7 +72,7 @@ page 50502 "GJ Map Work ListPart"
                 ApplicationArea = All;
                 trigger OnAction()
                 var
-                    TempFields: Record "GJ Field Temp" temporary;
+                    TempFields: Record "GJ Field Temp";
                     PageFields: Page "GJ Manage Field Lookup";
                     TmplMgt: Codeunit "GJ Template Management";
                 begin

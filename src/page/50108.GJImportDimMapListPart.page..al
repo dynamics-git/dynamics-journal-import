@@ -21,11 +21,27 @@ page 50508 "GJ Dim Map ListPart"
                 field("Column Index"; Rec."Column Index")
                 {
                     ApplicationArea = All;
+                    Caption = 'Excel Column Index';
+                    trigger OnLookup(var Text: Text): Boolean
+                    var
+                        Hdr: Record "GJ Excel Header Map";
+                    begin
+                        if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
+                            Rec."Column Index" := Hdr."Column Index";
+                            Rec."Excel Header Text" := Hdr."Header Text"; // optional: show text for clarity
+                        end;
+                    end;
                 }
-                field("Constant Value"; Rec."Constant Value")
+                field("Excel Header Text"; Rec."Excel Header Text")
                 {
                     ApplicationArea = All;
+                    ToolTip = 'Shows the Excel header text for the selected column.';
+                    Editable = false;
                 }
+                // field("Constant Value"; Rec."Constant Value")
+                // {
+                //     ApplicationArea = All;
+                // }
             }
         }
     }
