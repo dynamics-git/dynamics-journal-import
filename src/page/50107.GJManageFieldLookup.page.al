@@ -18,30 +18,11 @@ page 50507 "GJ Manage Field Lookup"
                 {
                     ApplicationArea = All;
                     trigger OnValidate()
-                    var
-                        R: Record "GJ Field Temp";
-                        MaxOrder: Integer;
-                        Hdr: Record "GJ Excel Header Map";
                     begin
-                        Rec."Processing Order" := 0;
-                        Rec."Excel Header Text" := '';
-                        if Rec.Selected and (Rec."Processing Order" = 0) then begin
-                            MaxOrder := 0;
-                            R.Copy(Rec, true);
-
-                            if R.FindSet() then
-                                repeat
-                                    if R.Selected and (R."Processing Order" > MaxOrder) then
-                                        MaxOrder := R."Processing Order";
-                                until R.Next() = 0;
-                            Rec."Processing Order" := MaxOrder + 1;
-                        end;
-                        if Rec."Processing Order" > 0 then begin
-                            Hdr.SetRange("Template Code", TemplateCodeCtx);
-                            Hdr.SetRange("Column Index", Rec."Processing Order");
-                            if Hdr.FindFirst() then
-                                Rec."Excel Header Text" := Hdr."Header Text";
-                        end;
+                        if Rec.Selected then
+                            TmplMgt.HandleFieldSelected(TemplateCodeCtx, Rec)
+                        else
+                            TmplMgt.HandleFieldDeselected(TemplateCodeCtx, Rec);
                     end;
                 }
                 field("Field No."; Rec."Field No.") { ApplicationArea = All; Editable = false; }
@@ -53,13 +34,8 @@ page 50507 "GJ Manage Field Lookup"
                     Lookup = true;
                     Caption = 'Excel Column Index';
                     trigger OnLookup(var Text: Text): Boolean
-                    var
-                        Hdr: Record "GJ Excel Header Map";
                     begin
-                        if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
-                            Rec."Processing Order" := Hdr."Column Index";
-                            Rec."Excel Header Text" := Hdr."Header Text"; // optional: show text for clarity
-                        end;
+                        exit(TmplMgt.HandleColumnLookup(TemplateCodeCtx, Rec));
                     end;
                 }
                 field("Excel Header Text"; Rec."Excel Header Text")

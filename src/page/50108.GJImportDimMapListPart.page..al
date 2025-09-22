@@ -5,7 +5,7 @@ page 50508 "GJ Dim Map ListPart"
     Caption = 'Dimension Mapping';
     ApplicationArea = All;
     InsertAllowed = false;
-    // DeleteAllowed = false;
+    DeleteAllowed = false;
 
     layout
     {
@@ -26,6 +26,8 @@ page 50508 "GJ Dim Map ListPart"
                     var
                         Hdr: Record "GJ Excel Header Map";
                     begin
+                        Hdr.Reset();
+                        Hdr.SetRange("Template Code", Rec."Template Code");
                         if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
                             Rec."Column Index" := Hdr."Column Index";
                             Rec."Excel Header Text" := Hdr."Header Text"; // optional: show text for clarity

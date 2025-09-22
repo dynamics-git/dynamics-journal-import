@@ -133,4 +133,85 @@ codeunit 50504 "GJ Template Management"
             until Map.Next() = 0;
     end;
 
+    procedure HandleFieldSelected(TemplateCode: Code[20]; var TempRec: Record "GJ Field Temp")
+    var
+        Map: Record "GJ Import Column Map";
+        Hdr: Record "GJ Excel Header Map";
+        MaxLineNo: Integer;
+    begin
+        // assign processing order from count
+        Map.Reset();
+        Map.SetRange("Template Code", TemplateCode);
+        TempRec."Processing Order" := Map.Count + 1;
+
+        // insert into column map if missing
+        Map.Reset();
+        Map.SetRange("Template Code", TemplateCode);
+        Map.SetRange("Target Field No.", TempRec."Field No.");
+        if not Map.FindFirst() then begin
+            if Map.FindLast() then
+                MaxLineNo := Map."Line No."
+            else
+                MaxLineNo := 0;
+
+            Map.Init();
+            Map."Template Code" := TemplateCode;
+            Map."Line No." := MaxLineNo + 1000;
+            Map."Target Field No." := TempRec."Field No.";
+            Map."Target Field Caption" := TempRec."Field Name";
+            Map."Column Index" := TempRec."Processing Order";
+            Map."Excel Header Text" := TempRec."Excel Header Text";
+            Map.Insert();
+        end;
+
+        // update header text
+        if TempRec."Processing Order" > 0 then begin
+            Hdr.Reset();
+            Hdr.SetRange("Template Code", TemplateCode);
+            Hdr.SetRange("Column Index", TempRec."Processing Order");
+            if Hdr.FindFirst() then
+                TempRec."Excel Header Text" := Hdr."Header Text";
+        end;
+    end;
+
+    procedure HandleFieldDeselected(TemplateCode: Code[20]; var TempRec: Record "GJ Field Temp")
+    var
+        Map: Record "GJ Import Column Map";
+    begin
+        Map.Reset();
+        Map.SetRange("Template Code", TemplateCode);
+        Map.SetRange("Target Field No.", TempRec."Field No.");
+        if Map.FindFirst() then
+            Map.Delete();
+
+        TempRec."Processing Order" := 0;
+        TempRec."Excel Header Text" := '';
+    end;
+
+    procedure HandleColumnLookup(TemplateCode: Code[20]; var TempRec: Record "GJ Field Temp"): Boolean
+    var
+        Hdr: Record "GJ Excel Header Map";
+        Map: Record "GJ Import Column Map";
+    begin
+        Hdr.Reset();
+        Hdr.SetRange("Template Code", TemplateCode);
+        if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
+            TempRec."Processing Order" := Hdr."Column Index";
+            TempRec."Excel Header Text" := Hdr."Header Text";
+
+            // sync into column map
+            Map.Reset();
+            Map.SetRange("Template Code", TemplateCode);
+            Map.SetRange("Target Field No.", TempRec."Field No.");
+            if Map.FindFirst() then begin
+                Map."Column Index" := Hdr."Column Index";
+                Map."Excel Header Text" := Hdr."Header Text";
+                Map.Modify();
+            end;
+
+            exit(true);
+        end;
+        exit(false);
+    end;
+
 }
