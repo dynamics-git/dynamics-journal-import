@@ -86,7 +86,7 @@ codeunit 50510 "GJ From Staging Importer"
             until ColMap.Next() = 0;
     end;
 
-    local procedure MapColumnToJournal(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; ColMap: Record "GJ Import Column Map")
+    local procedure MapColumnToJournal2(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; ColMap: Record "GJ Import Column Map")
     var
         ValueTxt: Text;
     begin
@@ -156,7 +156,7 @@ codeunit 50510 "GJ From Staging Importer"
                 GenLine.Validate("Selected Alloc. Account No.", ValueTxt);
             2677:
                 GenLine.Validate("Alloc. Acc. Modified by User", ImportUtils.EvaluateBool(ValueTxt));
-            6210:
+            64:
                 GenLine.Validate("Bal. Gen. Posting Type", ImportUtils.EvaluateEnumPostingType(ValueTxt));
             65:
                 GenLine.Validate("Bal. Gen. Bus. Posting Group", ValueTxt);
@@ -184,6 +184,90 @@ codeunit 50510 "GJ From Staging Importer"
                 GenLine.Validate("Shortcut Dimension 2 Code", ValueTxt);
         end;
     end;
+
+    local procedure MapColumnToJournal(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; ColMap: Record "GJ Import Column Map")
+    var
+        ValueTxt: Text;
+        RecRef: RecordRef;
+        FldRef: FieldRef;
+    begin
+        ValueTxt := GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value");
+
+        if ValueTxt = '' then
+            exit;
+
+        RecRef.GetTable(GenLine);
+
+        if RecRef.FieldExist(ColMap."Target Field No.") then begin
+            FldRef := RecRef.Field(ColMap."Target Field No.");
+
+            case FldRef.Type of
+                FieldType::Date:
+                    FldRef.Validate(ImportUtils.EvaluateDate(ValueTxt));
+
+                FieldType::DateTime:
+                    FldRef.Validate(ImportUtils.EvaluateDateTime(ValueTxt));
+
+                FieldType::Time:
+                    FldRef.Validate(ImportUtils.EvaluateTime(ValueTxt));
+
+                FieldType::DateFormula:
+                    FldRef.Validate(ImportUtils.EvaluateDateFormula(ValueTxt));
+
+                FieldType::Decimal:
+                    FldRef.Validate(ImportUtils.EvaluateDecimal(ValueTxt));
+
+                FieldType::Integer,
+            FieldType::BigInteger:
+                    FldRef.Validate(ImportUtils.EvaluateInteger(ValueTxt));
+
+                FieldType::Boolean:
+                    FldRef.Validate(ImportUtils.EvaluateBool(ValueTxt));
+                FieldType::Option:
+                    case ColMap."Target Field No." of
+                        6, 35:
+                            FldRef.Validate(ImportUtils.EvaluateEnumDocType(ValueTxt));
+                        3, 63:
+                            FldRef.Validate(ImportUtils.EvaluateEnumAccountType(ValueTxt));
+                        57, 64:
+                            FldRef.Validate(ImportUtils.EvaluateEnumPostingType(ValueTxt));
+                        53:
+                            FldRef.Validate(ImportUtils.EvaluateRecurringMethod(ValueTxt));
+                        60, 67:
+                            FldRef.Validate(ImportUtils.EvaluateTaxCalculationType(ValueTxt));
+                        70:
+                            FldRef.Validate(ImportUtils.EvaluateBankPaymentType(ValueTxt));
+                        78:
+                            FldRef.Validate(ImportUtils.EvaluateGenJournalSourceType(ValueTxt));
+                        114:
+                            FldRef.Validate(ImportUtils.EvaluateICDirection(ValueTxt));
+                        130:
+                            FldRef.Validate(ImportUtils.EvaluateICJournalAccountType(ValueTxt));
+                        160:
+                            FldRef.Validate(ImportUtils.EvaluateJobQueueStatus(ValueTxt));
+                        1009:
+                            FldRef.Validate(ImportUtils.EvaluateJobLineType(ValueTxt));
+                        5601:
+                            FldRef.Validate(ImportUtils.EvaluateFAPostingType(ValueTxt));
+                        45:
+                            FldRef.Validate(ImportUtils.EvaluateVatPosting(ValueTxt));
+                        95:
+                            FldRef.Validate(ImportUtils.EvaluateAdditionalCurrencyPosting(ValueTxt));
+                    end;
+
+                FieldType::Text,
+                FieldType::Code:
+                    FldRef.Validate(ValueTxt);
+                FieldType::Guid:
+                    FldRef.Validate(ImportUtils.EvaluateGuid(ValueTxt));
+                else
+                    FldRef.Validate(ValueTxt);
+            end;
+
+            RecRef.SetTable(GenLine);
+        end;
+    end;
+
 
     local procedure ApplyDimensionMapping(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; TemplateCode: Code[20])
     var
