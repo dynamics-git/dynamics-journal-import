@@ -1,4 +1,4 @@
-table 50501 "GJ Import Column Map"
+table 50201 "GJ Import Column Map"
 {
     Caption = 'GJ Import Column Map';
     DataClassification = CustomerContent;

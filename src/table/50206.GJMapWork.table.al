@@ -1,4 +1,4 @@
-table 50506 "GJ Map Work"
+table 50206 "GJ Map Work"
 {
     Caption = 'GJ Map Work';
     DataClassification = CustomerContent;

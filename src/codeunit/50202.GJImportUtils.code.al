@@ -1,4 +1,4 @@
-codeunit 50503 "GJ Import Utils"
+codeunit 50202 "GJ Import Utils"
 {
 
     procedure EvaluateEnumAccountType(ValueTxt: Text): Enum "Gen. Journal Account Type"

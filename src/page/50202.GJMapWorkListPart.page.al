@@ -1,4 +1,4 @@
-page 50502 "GJ Map Work ListPart"
+page 50202 "GJ Map Work ListPart"
 {
     PageType = ListPart;
     SourceTable = "GJ Import Column Map";

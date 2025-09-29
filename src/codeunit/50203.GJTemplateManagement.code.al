@@ -1,4 +1,4 @@
-codeunit 50504 "GJ Template Management"
+codeunit 50203 "GJ Template Management"
 {
     Access = Public;
 

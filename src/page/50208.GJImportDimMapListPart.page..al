@@ -1,4 +1,4 @@
-page 50508 "GJ Dim Map ListPart"
+page 50208 "GJ Dim Map ListPart"
 {
     PageType = ListPart;
     SourceTable = "GJ Import Dim Map";

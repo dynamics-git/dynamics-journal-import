@@ -1,4 +1,4 @@
-page 50506 "GJ Field Lookup"
+page 50206 "GJ Field Lookup"
 {
     PageType = List;
     SourceTable = Field;

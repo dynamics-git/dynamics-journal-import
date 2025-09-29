@@ -1,4 +1,4 @@
-table 50504 "GJ GL Mapping"
+table 50204 "GJ GL Mapping"
 {
     Caption = 'GJ GL Mapping';
     DataClassification = CustomerContent;

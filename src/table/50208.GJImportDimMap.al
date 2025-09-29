@@ -1,4 +1,4 @@
-table 50508 "GJ Import Dim Map"
+table 50208 "GJ Import Dim Map"
 {
     Caption = 'GJ Import Dimension Map';
     DataClassification = CustomerContent;

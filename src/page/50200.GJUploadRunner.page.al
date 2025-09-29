@@ -1,4 +1,4 @@
-page 50500 "GJ Upload Runner"
+page 50200 "GJ Upload Runner"
 {
     PageType = Card;                  // was StandardDialog
     UsageCategory = Tasks;

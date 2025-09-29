@@ -1,4 +1,4 @@
-page 50509 "GJ Excel Header Lookup"
+page 50209 "GJ Excel Header Lookup"
 {
     PageType = List;
     SourceTable = "GJ Excel Header Map";

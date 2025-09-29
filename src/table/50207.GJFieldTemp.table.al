@@ -1,4 +1,4 @@
-table 50507 "GJ Field Temp"
+table 50207 "GJ Field Temp"
 {
 
     DataClassification = CustomerContent;

@@ -1,4 +1,4 @@
-codeunit 50500 "GJ Staging Loader"
+codeunit 50200 "GJ Staging Loader"
 {
     var
         TempExcelBuffer: Record "Excel Buffer" temporary;
@@ -50,25 +50,21 @@ codeunit 50500 "GJ Staging Loader"
         H: Record "GJ Staging Header";
         L: Record "GJ Staging Line";
         UploadId: Guid;
-        LastRow: Integer;
-        LastCol: Integer;
         RowIdx: Integer;
         ColIdx: Integer;
         StoredSheetName: Text[250];
         IsHandled: Boolean;
+        LastRow: Integer;
+        LastCol: Integer;
     begin
         IntegrationEvent.OnBeforeImportExcelData(TemplateCode, NewTemplate, FileName, SheetNameIn, HasHeader, StartRow, UploadId, IsHandled);
         if IsHandled then
             exit(UploadId);
         RowNo := 0;
         LineNo := 0;
-        LastRow := 0;
-        LastCol := 0;
+
         TempExcelBuffer.Reset();
-        if TempExcelBuffer.FindLast() then begin
-            LastRow := TempExcelBuffer."Row No.";
-            LastCol := TempExcelBuffer."Column No.";
-        end;
+        CalcMaxRowAndCol(LastRow, LastCol);
 
         StoredSheetName := SelectStoredSheetName(SheetNameIn);
         UploadId := CreateGuid();
@@ -179,6 +175,7 @@ codeunit 50500 "GJ Staging Loader"
             exit;
 
         // Clear existing headers for this upload
+        HeaderMap.Reset();
         HeaderMap.SetRange("Template Code", TemplateCode);
         HeaderMap.DeleteAll();
 

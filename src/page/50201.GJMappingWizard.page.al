@@ -1,4 +1,4 @@
-page 50501 "GJ Mapping Wizard"
+page 50201 "GJ Mapping Wizard"
 {
     PageType = Card;
     Caption = 'Mapping Wizard';

@@ -1,4 +1,4 @@
-page 50503 "GJ Import Template Card"
+page 50203 "GJ Import Template Card"
 {
     PageType = Card;
     SourceTable = "GJ Import Template";

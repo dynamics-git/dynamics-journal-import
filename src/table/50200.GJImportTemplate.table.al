@@ -1,4 +1,4 @@
-table 50500 "GJ Import Template"
+table 50200 "GJ Import Template"
 {
     Caption = 'GJ Import Template';
     DataClassification = CustomerContent;

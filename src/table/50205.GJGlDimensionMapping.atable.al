@@ -1,4 +1,4 @@
-table 50505 "GJ Dimension Mapping"
+table 50205 "GJ Dimension Mapping"
 {
     Caption = 'GJ Dimension Mapping';
     DataClassification = CustomerContent;

@@ -1,4 +1,4 @@
-page 50504 "GJ Import Template List"
+page 50204 "GJ Import Template List"
 {
     PageType = List;
     ApplicationArea = All;
