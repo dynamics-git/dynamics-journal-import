@@ -1,4 +1,4 @@
-codeunit 50510 "GJ From Staging Importer"
+codeunit 50201 "GJ From Staging Importer"
 {
     var
         ImportUtils: Codeunit "GJ Import Utils";
@@ -89,101 +89,86 @@ codeunit 50510 "GJ From Staging Importer"
     local procedure MapColumnToJournal(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; ColMap: Record "GJ Import Column Map")
     var
         ValueTxt: Text;
+        RecRef: RecordRef;
+        FldRef: FieldRef;
     begin
         ValueTxt := GetValue(StagingLine, ColMap."Column Index", ColMap."Constant Value");
 
-        case ColMap."Target Field No." of
-            // Dates
-            5:
-                GenLine.Validate("Posting Date", ImportUtils.EvaluateDate(ValueTxt));
-            128:
-                GenLine.Validate("VAT Reporting Date", ImportUtils.EvaluateDate(ValueTxt));
+        if ValueTxt = '' then
+            exit;
 
-            // Document
-            6:
-                GenLine.Validate("Document Type", ImportUtils.EvaluateEnumDocType(ValueTxt));
-            7:
-                GenLine.Validate("Document No.", ValueTxt);
+        RecRef.GetTable(GenLine);
 
-            // Account
-            3:
-                GenLine.Validate("Account Type", ImportUtils.EvaluateEnumAccountType(ValueTxt));
-            4:
-                GenLine.Validate("Account No.", ValueTxt);
-            8001:
-                GenLine.Validate("Account Id", ValueTxt);
+        if RecRef.FieldExist(ColMap."Target Field No.") then begin
+            FldRef := RecRef.Field(ColMap."Target Field No.");
 
-            // Texts
-            8:
-                GenLine.Validate(Description, ValueTxt);
-            118:
-                GenLine.Validate("Sell-to/Buy-from No.", ValueTxt);
-            289:
-                GenLine.Validate("Message to Recipient", ValueTxt);
+            case FldRef.Type of
+                FieldType::Date:
+                    FldRef.Validate(ImportUtils.EvaluateDate(ValueTxt));
 
-            // Currency
-            12:
-                GenLine.Validate("Currency Code", ValueTxt);
-            61:
-                GenLine.Validate("EU 3-Party Trade", ImportUtils.EvaluateBool(ValueTxt));
+                FieldType::DateTime:
+                    FldRef.Validate(ImportUtils.EvaluateDateTime(ValueTxt));
 
-            // Posting groups
-            57:
-                GenLine.Validate("Gen. Posting Type", ImportUtils.EvaluateEnumPostingType(ValueTxt));
-            58:
-                GenLine.Validate("Gen. Bus. Posting Group", ValueTxt);
-            59:
-                GenLine.Validate("Gen. Prod. Posting Group", ValueTxt);
-            90:
-                GenLine.Validate("VAT Bus. Posting Group", ValueTxt);
-            91:
-                GenLine.Validate("VAT Prod. Posting Group", ValueTxt);
+                FieldType::Time:
+                    FldRef.Validate(ImportUtils.EvaluateTime(ValueTxt));
 
-            // Amounts
-            13:
-                GenLine.Validate(Amount, ImportUtils.EvaluateDecimal(ValueTxt));
-            16:
-                GenLine.Validate("Amount (LCY)", ImportUtils.EvaluateDecimal(ValueTxt));
+                FieldType::DateFormula:
+                    FldRef.Validate(ImportUtils.EvaluateDateFormula(ValueTxt));
 
-            // Balancing
-            63:
-                GenLine.Validate("Bal. Account Type", ImportUtils.EvaluateEnumAccountType(ValueTxt));
-            11:
-                GenLine.Validate("Bal. Account No.", ValueTxt);
-            2678:
-                GenLine.Validate("Allocation Account No.", ValueTxt);
-            2676:
-                GenLine.Validate("Selected Alloc. Account No.", ValueTxt);
-            2677:
-                GenLine.Validate("Alloc. Acc. Modified by User", ImportUtils.EvaluateBool(ValueTxt));
-            6210:
-                GenLine.Validate("Bal. Gen. Posting Type", ImportUtils.EvaluateEnumPostingType(ValueTxt));
-            65:
-                GenLine.Validate("Bal. Gen. Bus. Posting Group", ValueTxt);
-            92:
-                GenLine.Validate("Bal. VAT Bus. Posting Group", ValueTxt);
-            66:
-                GenLine.Validate("Bal. Gen. Prod. Posting Group", ValueTxt);
+                FieldType::Decimal:
+                    FldRef.Validate(ImportUtils.EvaluateDecimal(ValueTxt));
 
-            // Deferral
-            1700:
-                GenLine.Validate("Deferral Code", ValueTxt);
+                FieldType::Integer,
+            FieldType::BigInteger:
+                    FldRef.Validate(ImportUtils.EvaluateInteger(ValueTxt));
 
-            // Boolean
-            73:
-                GenLine.Validate(Correction, ImportUtils.EvaluateBool(ValueTxt));
+                FieldType::Boolean:
+                    FldRef.Validate(ImportUtils.EvaluateBool(ValueTxt));
+                FieldType::Option:
+                    case ColMap."Target Field No." of
+                        6, 35:
+                            FldRef.Validate(ImportUtils.EvaluateEnumDocType(ValueTxt));
+                        3, 63:
+                            FldRef.Validate(ImportUtils.EvaluateEnumAccountType(ValueTxt));
+                        57, 64:
+                            FldRef.Validate(ImportUtils.EvaluateEnumPostingType(ValueTxt));
+                        53:
+                            FldRef.Validate(ImportUtils.EvaluateRecurringMethod(ValueTxt));
+                        60, 67:
+                            FldRef.Validate(ImportUtils.EvaluateTaxCalculationType(ValueTxt));
+                        70:
+                            FldRef.Validate(ImportUtils.EvaluateBankPaymentType(ValueTxt));
+                        78:
+                            FldRef.Validate(ImportUtils.EvaluateGenJournalSourceType(ValueTxt));
+                        114:
+                            FldRef.Validate(ImportUtils.EvaluateICDirection(ValueTxt));
+                        130:
+                            FldRef.Validate(ImportUtils.EvaluateICJournalAccountType(ValueTxt));
+                        160:
+                            FldRef.Validate(ImportUtils.EvaluateJobQueueStatus(ValueTxt));
+                        1009:
+                            FldRef.Validate(ImportUtils.EvaluateJobLineType(ValueTxt));
+                        5601:
+                            FldRef.Validate(ImportUtils.EvaluateFAPostingType(ValueTxt));
+                        45:
+                            FldRef.Validate(ImportUtils.EvaluateVatPosting(ValueTxt));
+                        95:
+                            FldRef.Validate(ImportUtils.EvaluateAdditionalCurrencyPosting(ValueTxt));
+                    end;
 
-            // Comment
-            5618:
-                GenLine.Validate(Comment, ValueTxt);
+                FieldType::Text,
+                FieldType::Code:
+                    FldRef.Validate(ValueTxt);
+                FieldType::Guid:
+                    FldRef.Validate(ImportUtils.EvaluateGuid(ValueTxt));
+                else
+                    FldRef.Validate(ValueTxt);
+            end;
 
-            // Dimensions (shortcuts only!)
-            24:
-                GenLine.Validate("Shortcut Dimension 1 Code", ValueTxt);
-            25:
-                GenLine.Validate("Shortcut Dimension 2 Code", ValueTxt);
+            RecRef.SetTable(GenLine);
         end;
     end;
+
 
     local procedure ApplyDimensionMapping(var GenLine: Record "Gen. Journal Line"; StagingLine: Record "GJ Staging Line"; TemplateCode: Code[20])
     var

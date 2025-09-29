@@ -1,4 +1,4 @@
-codeunit 50504 "GJ Template Management"
+codeunit 50203 "GJ Template Management"
 {
     Access = Public;
 
@@ -41,7 +41,8 @@ codeunit 50504 "GJ Template Management"
         MapRec.Reset();
         MapRec.SetRange("Template Code", TemplateCode);
         MapRec.DeleteAll();
-
+        TempFields.SetCurrentKey("Processing Order");
+        TempFields.Ascending(True);
         if TempFields.FindSet(true, true) then begin
             OrderNo := 0;
             NextLineNo := 1000;

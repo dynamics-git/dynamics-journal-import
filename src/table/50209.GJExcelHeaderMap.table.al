@@ -1,4 +1,4 @@
-table 50509 "GJ Excel Header Map"
+table 50209 "GJ Excel Header Map"
 {
     DataClassification = ToBeClassified;
     fields

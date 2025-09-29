@@ -1,4 +1,4 @@
-codeunit 50505 "GJ Integration Event"
+codeunit 50204 "GJ Integration Event"
 {
     [IntegrationEvent(false, false)]
     procedure OnBeforeReadExcelSheet(TemplateCode: Code[20]; NewTemplate: Code[20];

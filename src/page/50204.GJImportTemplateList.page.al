@@ -1,4 +1,4 @@
-page 50504 "GJ Import Template List"
+page 50204 "GJ Import Template List"
 {
     PageType = List;
     ApplicationArea = All;
@@ -20,34 +20,19 @@ page 50504 "GJ Import Template List"
                 {
                     ToolTip = 'Specifies the value of the Template Code field.', Comment = '%';
                 }
-                field("Sheet Name"; Rec."Sheet Name")
+                field(Description; Rec.Description)
                 {
-                    ToolTip = 'Specifies the value of the Default Sheet Name field.', Comment = '%';
+                    ToolTip = 'Specifies the value of the Description field.', Comment = '%';
                 }
                 field("Gen. Jnl. Template Name"; Rec."Gen. Jnl. Template Name")
                 {
                     ToolTip = 'Specifies the value of the Gen. Journal Template Name field.', Comment = '%';
                 }
-                field(Description; Rec.Description)
-                {
-                    ToolTip = 'Specifies the value of the Description field.', Comment = '%';
-                }
-                field("Currency Code"; Rec."Currency Code")
-                {
-                    ToolTip = 'Specifies the value of the Currency Code field.', Comment = '%';
-                }
-                field("Bal. Account No."; Rec."Bal. Account No.")
-                {
-                    ToolTip = 'Specifies the value of the Default Bal. Account No. field.', Comment = '%';
-                }
                 field("Gen. Jnl. Batch Name"; Rec."Gen. Jnl. Batch Name")
                 {
                     ToolTip = 'Specifies the value of the Gen. Journal Batch Name field.', Comment = '%';
                 }
-                field("Default Posting Date"; Rec."Default Posting Date")
-                {
-                    ToolTip = 'Specifies the value of the Default Posting Date field.', Comment = '%';
-                }
+
                 field("Has Header Row"; Rec."Has Header Row")
                 {
                     ToolTip = 'Specifies the value of the Has Header Row field.', Comment = '%';

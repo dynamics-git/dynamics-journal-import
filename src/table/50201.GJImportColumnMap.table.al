@@ -1,4 +1,4 @@
-table 50501 "GJ Import Column Map"
+table 50201 "GJ Import Column Map"
 {
     Caption = 'GJ Import Column Map';
     DataClassification = CustomerContent;
@@ -26,7 +26,7 @@ table 50501 "GJ Import Column Map"
         }
     }
 
-    keys { key(PK; "Template Code", "Target Field No.") { Clustered = true; } }
+    keys { key(PK; "Template Code", "Line No.") { Clustered = true; } }
     trigger OnInsert()
     var
         MapRec: Record "GJ Import Column Map";

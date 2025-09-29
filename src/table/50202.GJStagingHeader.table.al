@@ -1,4 +1,4 @@
-table 50502 "GJ Staging Header"
+table 50202 "GJ Staging Header"
 
 {
 

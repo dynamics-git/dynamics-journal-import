@@ -1,4 +1,4 @@
-table 50507 "GJ Field Temp"
+table 50207 "GJ Field Temp"
 {
 
     DataClassification = CustomerContent;
@@ -14,6 +14,7 @@ table 50507 "GJ Field Temp"
         field(6; "Excel Header Text"; Text[250])
         {
         }
+        field(7; "Line No."; Integer) { }
     }
 
     keys { key(PK; "Field No.") { Clustered = true; } }

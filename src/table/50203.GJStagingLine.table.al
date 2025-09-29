@@ -1,4 +1,4 @@
-table 50503 "GJ Staging Line"
+table 50203 "GJ Staging Line"
 {
     Caption = 'GJ Staging Line';
     DataClassification = CustomerContent;
@@ -57,6 +57,9 @@ table 50503 "GJ Staging Line"
         field(50; "Col48"; Text[250]) { }
         field(51; "Col49"; Text[250]) { }
         field(52; "Col50"; Text[250]) { }
+        // Add more fields if needed, and maintain the same pattern. Field references should be incremental and no gaps.Your field will start from 53 and name it Col51, Col52, and so on. An exmaple of the next few fields is shown below:
+        // field(53; "Col51"; Text[250]) { }
+        // field(54; "Col52"; Text[250]) { }
     }
 
     keys { key(PK; "Upload Id", "Row No.") { Clustered = true; } }

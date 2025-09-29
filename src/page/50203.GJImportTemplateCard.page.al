@@ -1,4 +1,4 @@
-page 50503 "GJ Import Template Card"
+page 50203 "GJ Import Template Card"
 {
     PageType = Card;
     SourceTable = "GJ Import Template";
@@ -21,15 +21,16 @@ page 50503 "GJ Import Template Card"
                         end;
                     end;
                 }
-                field("Description"; Rec."Description") { }
                 field("Gen. Jnl. Template Name"; Rec."Gen. Jnl. Template Name") { }
                 field("Gen. Jnl. Batch Name"; Rec."Gen. Jnl. Batch Name") { }
-                field("Default Posting Date"; Rec."Default Posting Date") { }
-                field("Currency Code"; Rec."Currency Code") { }
-                field("Bal. Account No."; Rec."Bal. Account No.") { }
+                field("Description"; Rec."Description") { }
+
+                // field("Default Posting Date"; Rec."Default Posting Date") { }
+                // field("Currency Code"; Rec."Currency Code") { }
+                // field("Bal. Account No."; Rec."Bal. Account No.") { }
                 field("Has Header Row"; Rec."Has Header Row") { }
                 field("Start Row"; Rec."Start Row") { }
-                field("Sheet Name"; Rec."Sheet Name") { }
+                // field("Sheet Name"; Rec."Sheet Name") { }
             }
             part(Map; "GJ Map Work ListPart")
             {

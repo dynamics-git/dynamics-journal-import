@@ -1,4 +1,4 @@
-page 50502 "GJ Map Work ListPart"
+page 50202 "GJ Map Work ListPart"
 {
     PageType = ListPart;
     SourceTable = "GJ Import Column Map";
@@ -23,6 +23,7 @@ page 50502 "GJ Map Work ListPart"
                     var
                         Hdr: Record "GJ Excel Header Map";
                     begin
+                        Hdr.SetRange("Template Code", TemplateCodeCtx);
                         if PAGE.RunModal(PAGE::"GJ Excel Header Lookup", Hdr) = Action::LookupOK then begin
                             Rec."Column Index" := Hdr."Column Index";
                             Rec."Excel Header Text" := Hdr."Header Text"; // optional: show text for clarity
@@ -72,7 +73,7 @@ page 50502 "GJ Map Work ListPart"
                 ApplicationArea = All;
                 trigger OnAction()
                 var
-                    TempFields: Record "GJ Field Temp" temporary;
+                    TempFields: Record "GJ Field Temp";
                     PageFields: Page "GJ Manage Field Lookup";
                     TmplMgt: Codeunit "GJ Template Management";
                 begin
@@ -80,7 +81,7 @@ page 50502 "GJ Map Work ListPart"
 
                     if PageFields.RunModal() = Action::OK then begin
                         PageFields.GetSelections(TempFields);
-                        TmplMgt.SaveFieldSelections(TemplateCodeCtx, TempFields);
+                        //TmplMgt.SaveFieldSelections(TemplateCodeCtx, TempFields);
                     end;
                     CurrPage.Update(false);
                 end;

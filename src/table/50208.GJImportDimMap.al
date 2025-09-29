@@ -1,4 +1,4 @@
-table 50508 "GJ Import Dim Map"
+table 50208 "GJ Import Dim Map"
 {
     Caption = 'GJ Import Dimension Map';
     DataClassification = CustomerContent;
@@ -19,6 +19,11 @@ table 50508 "GJ Import Dim Map"
         field(3; "Column Index"; Integer)
         {
             Caption = 'Excel Column (1=A, 2=B, …)';
+        }
+        field(9; "Excel Header Text"; Text[250])
+        {
+            Caption = 'Excel Header';
+            Editable = false;
         }
         field(4; "Constant Value"; Text[100])
         {

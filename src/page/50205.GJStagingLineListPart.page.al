@@ -1,4 +1,4 @@
-page 50505 "GJ Staging Line ListPart"
+page 50205 "GJ Staging Line ListPart"
 {
     PageType = ListPart;
     SourceTable = "GJ Staging Line";
